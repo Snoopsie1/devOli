@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" />
+<script type="importmap">
+{"imports":{"three":"https://esm.sh/three@0.169.0/build/three.module.js","three/addons/":"https://esm.sh/three@0.169.0/examples/jsm/"}}
+</script>
+<script type="module" src="./sculpt-face.js"></script>
+<style>
+  body { margin: 0; background: #06060f; }
+  a { color: #7fd0ff; } a:hover { color: #ffe45e; }
+  @keyframes blink { 0%,60% { opacity: 1 } 61%,100% { opacity: .25 } }
+  @keyframes shimmer { 0%,100% { opacity: .1 } 50% { opacity: .18 } }
+</style>
+</helmet>
+<div style="position:relative;width:100%;min-height:100vh;overflow:hidden;background:radial-gradient(120% 90% at 50% 45%, #22246b 0%, #101040 42%, #05050e 100%);font-family:'Press Start 2P', monospace;color:#dfe3ff">
+
+  <div style="position:absolute;inset:0;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:25vh;place-items:center;animation:shimmer 6s ease-in-out infinite;pointer-events:none;user-select:none">
+    <span style="font-size:34px;letter-spacing:2px;color:#5b62d8;text-shadow:0 3px 0 #2a2e8a">SCULPT</span>
+    <span style="font-size:34px;letter-spacing:2px;color:#5b62d8;text-shadow:0 3px 0 #2a2e8a">ME</span>
+    <span style="font-size:34px;letter-spacing:2px;color:#5b62d8;text-shadow:0 3px 0 #2a2e8a">SCULPT</span>
+    <span style="font-size:34px;letter-spacing:2px;color:#5b62d8;text-shadow:0 3px 0 #2a2e8a">ME</span>
+    <span style="font-size:34px;letter-spacing:2px;color:#5b62d8;text-shadow:0 3px 0 #2a2e8a">ME</span>
+    <span style="font-size:34px;letter-spacing:2px;color:#5b62d8;text-shadow:0 3px 0 #2a2e8a">SCULPT</span>
+    <span style="font-size:34px;letter-spacing:2px;color:#5b62d8;text-shadow:0 3px 0 #2a2e8a">ME</span>
+    <span style="font-size:34px;letter-spacing:2px;color:#5b62d8;text-shadow:0 3px 0 #2a2e8a">SCULPT</span>
+    <span style="font-size:34px;letter-spacing:2px;color:#5b62d8;text-shadow:0 3px 0 #2a2e8a">SCULPT</span>
+    <span style="font-size:34px;letter-spacing:2px;color:#5b62d8;text-shadow:0 3px 0 #2a2e8a">ME</span>
+    <span style="font-size:34px;letter-spacing:2px;color:#5b62d8;text-shadow:0 3px 0 #2a2e8a">SCULPT</span>
+    <span style="font-size:34px;letter-spacing:2px;color:#5b62d8;text-shadow:0 3px 0 #2a2e8a">ME</span>
+    <span style="font-size:34px;letter-spacing:2px;color:#5b62d8;text-shadow:0 3px 0 #2a2e8a">ME</span>
+    <span style="font-size:34px;letter-spacing:2px;color:#5b62d8;text-shadow:0 3px 0 #2a2e8a">SCULPT</span>
+    <span style="font-size:34px;letter-spacing:2px;color:#5b62d8;text-shadow:0 3px 0 #2a2e8a">ME</span>
+    <span style="font-size:34px;letter-spacing:2px;color:#5b62d8;text-shadow:0 3px 0 #2a2e8a">SCULPT</span>
+  </div>
+
+  <div style="position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom, rgba(0,0,0,.16) 0 1px, transparent 1px 3px);mix-blend-mode:multiply;z-index:3"></div>
+  <div style="position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 180px 60px rgba(0,0,0,.75);z-index:4"></div>
+
+  <sculpt-face skin="{{ skin }}" brush="{{ brush }}" pixel="{{ pixel }}" style="position:absolute;inset:0;z-index:2"></sculpt-face>
+
+  <div style="position:absolute;left:0;right:0;bottom:34px;z-index:5;display:flex;flex-direction:column;align-items:center;gap:14px;pointer-events:none">
+    <div style="display:flex;gap:10px;animation:blink 1.4s steps(1,end) infinite">
+      <span style="font-size:26px;color:#ff4d4d;text-shadow:0 4px 0 #3a0000">DRAG</span>
+      <span style="font-size:26px;color:#ffd23f;text-shadow:0 4px 0 #4a3200">TO</span>
+      <span style="font-size:26px;color:#4fd66d;text-shadow:0 4px 0 #073d16">SCULPT</span>
+    </div>
+    <div style="font-size:11px;letter-spacing:1px;color:#9aa2e8">RIGHT-CLICK RESETS &nbsp;·&nbsp; DRAG THE VOID TO TURN THE HEAD</div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;skin&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#e3ab7f&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#e3ab7f&quot;,&quot;#f0c49b&quot;,&quot;#c98d63&quot;,&quot;#a86b46&quot;],&quot;section&quot;:&quot;Face&quot;},&quot;brush&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.52,&quot;min&quot;:0.25,&quot;max&quot;:1.4,&quot;step&quot;:0.02,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Sculpting&quot;},&quot;crunch&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.42,&quot;min&quot;:0.12,&quot;max&quot;:1,&quot;step&quot;:0.02,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Look&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      skin: this.props.skin ?? '#e3ab7f',
+      brush: this.props.brush ?? 0.52,
+      pixel: this.props.crunch ?? 0.42,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

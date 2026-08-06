@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;700&display=swap" />
+<script type="importmap">
+{"imports":{"three":"https://esm.sh/three@0.169.0/build/three.module.js","three/addons/":"https://esm.sh/three@0.169.0/examples/jsm/"}}
+</script>
+<script type="module" src="./sculpt-face.js"></script>
+<style>
+  body { margin: 0; background: #05050e; overflow: hidden; }
+  a { color: #9aa2e8; text-decoration: none; } a:hover { color: #ffd23f; }
+  @keyframes blink { 0%,60% { opacity: 1 } 61%,100% { opacity: .2 } }
+  @keyframes swell { 0%,100% { opacity: .12 } 50% { opacity: .2 } }
+  @keyframes fadein { from { opacity: 0; transform: translateY(14px) } to { opacity: 1; transform: none } }
+</style>
+</helmet>
+
+<div style="position:relative;width:100vw;height:100dvh;overflow:hidden;background:radial-gradient(120% 90% at 50% 45%, #22246b 0%, #101040 42%, #05050e 100%);font-family:'Press Start 2P', monospace;color:#dfe3ff;user-select:none;-webkit-tap-highlight-color:transparent">
+
+  <div style="{{ watermarkStyle }}">
+    <sc-for list="{{ marks }}" as="m" hint-placeholder-count="12">
+      <span style="{{ m.style }}">{{ m.t }}</span>
+    </sc-for>
+  </div>
+
+  <sculpt-face skin="#e3ab7f" brush="0.52" pixel="0.42" style="{{ faceStyle }}"></sculpt-face>
+
+  <div style="{{ brandStyle }}">
+    <span onClick="{{ goHome }}" style="{{ brandNameStyle }}">YOUR NAME</span>
+    <span style="{{ brandSubStyle }}">FRONT-END ENGINEER · COPENHAGEN</span>
+  </div>
+
+  <div style="{{ navStyle }}">
+    <sc-for list="{{ nav }}" as="item" hint-placeholder-count="3">
+      <span onClick="{{ item.go }}" onMouseEnter="{{ item.hover }}" style="{{ item.style }}">{{ item.label }}</span>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ isBoot }}" hint-placeholder-val="{{ true }}">
+    <div style="{{ bootStyle }}">
+      <div onClick="{{ start }}" style="display:flex;gap:12px;animation:blink 1.4s steps(1,end) infinite;cursor:pointer;padding:10px 4px">
+        <span style="{{ pressStyle }}">PRESS</span>
+        <span style="{{ startStyle }}">START</span>
+      </div>
+      <div style="{{ bootHintStyle }}">{{ bootHint }}</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isWork }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ workStyle }}">
+      <span style="{{ sectionTitleStyle }}">SELECT A FILE</span>
+      <div style="{{ gridStyle }}">
+        <sc-for list="{{ projects }}" as="p" hint-placeholder-count="6">
+          <div onClick="{{ p.open }}" onMouseEnter="{{ p.hover }}" style="{{ p.style }}">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:9px;color:#ffd23f;letter-spacing:1px">FILE {{ p.num }}</span>
+              <span style="font-size:9px;color:#8f97dd">{{ p.year }}</span>
+            </div>
+            <span style="font-size:12px;line-height:1.55;color:#fff">{{ p.name }}</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.55;color:#a8b0ee">{{ p.blurb }}</span>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:2px">
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:nowrap">
+                <sc-for list="{{ p.stars }}" as="s" hint-placeholder-count="3">
+                  <span style="{{ s.style }}">★</span>
+                </sc-for>
+              </div>
+              <span style="font-size:8px;line-height:1.6;color:#7b83c9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.stack }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <span style="{{ workHintStyle }}">{{ workHint }}</span>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ detailWrapStyle }}">
+      <div style="{{ detailPanelStyle }}">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+          <span style="font-size:9px;letter-spacing:2px;color:#ffd23f">FILE {{ detail.num }} · {{ detail.year }}</span>
+          <span onClick="{{ back }}" style="{{ closeStyle }}">{{ closeLabel }}</span>
+        </div>
+        <span style="{{ detailTitleStyle }}">{{ detail.name }}</span>
+        <span style="{{ detailBodyStyle }}">{{ detail.body }}</span>
+        <div style="{{ factsStyle }}">
+          <sc-for list="{{ detail.facts }}" as="f" hint-placeholder-count="3">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:8px;letter-spacing:2px;color:#7b83c9">{{ f.k }}</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#eaeeff">{{ f.v }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isAbout }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ aboutStyle }}">
+      <span style="{{ sectionTitleStyle }}">PLAYER PROFILE</span>
+      <span style="{{ aboutBodyStyle }}">Ten years building interfaces that feel like objects. TypeScript, WebGL, and a stubborn belief that a portfolio should be playable. This head is a real-time mesh — poke it.</span>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <sc-for list="{{ skills }}" as="s" hint-placeholder-count="4">
+          <div style="{{ s.row }}">
+            <span style="{{ s.label }}">{{ s.k }}</span>
+            <div style="flex:1;height:14px;background:#141860;border:2px solid #3b45b8">
+              <div style="{{ s.bar }}"></div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isContact }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ contactStyle }}">
+      <span style="{{ sectionTitleStyle }}">CONTINUE?</span>
+      <div style="{{ contactRowStyle }}">
+        <a href="mailto:hello@yourname.dev" style="{{ ctaPrimary }}" style-hover="background:#fff">EMAIL ME</a>
+        <a href="https://github.com" style="{{ ctaSecondary }}" style-hover="background:#3b45b8">GITHUB</a>
+        <a href="https://linkedin.com" style="{{ ctaSecondary }}" style-hover="background:#3b45b8">LINKEDIN</a>
+      </div>
+      <span style="font-size:9px;line-height:1.7;color:#8f97dd;letter-spacing:1px;text-align:center">AVAILABLE FOR FREELANCE FROM Q4</span>
+    </div>
+  </sc-if>
+
+  <div style="{{ statusStyle }}">
+    <span>{{ statusLabel }}</span>
+    <span>{{ inputHint }}</span>
+  </div>
+
+  <div style="position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom, rgba(0,0,0,.16) 0 1px, transparent 1px 3px);mix-blend-mode:multiply;z-index:20"></div>
+  <div style="position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 180px 60px rgba(0,0,0,.75);z-index:21"></div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;skin&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#e3ab7f&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#e3ab7f&quot;,&quot;#f0c49b&quot;,&quot;#c98d63&quot;,&quot;#a86b46&quot;],&quot;section&quot;:&quot;Face&quot;}}">
+const PROJECTS = [
+  { num: 'A', year: '2026', name: 'ORBIT — DESIGN SYSTEM', blurb: 'A 200-component library shipped across six product teams.', stack: 'TS · REACT · TOKENS', stars: 6,
+    body: 'Built the shared component layer for a multi-product suite: tokens, theming, a11y contracts and a docs site that engineers actually read. Cut new-screen build time roughly in half.',
+    facts: [['ROLE', 'Lead front-end'], ['TEAM', '4 engineers'], ['SHIPPED', '18 months']] },
+  { num: 'B', year: '2025', name: 'FLUX — REALTIME EDITOR', blurb: 'Collaborative canvas with CRDT sync and 60fps rendering.', stack: 'TS · WEBGL · CRDT', stars: 5,
+    body: 'A multiplayer canvas editor. Custom WebGL renderer, conflict-free sync, and an input layer that keeps latency under a frame even with thirty cursors on screen.',
+    facts: [['ROLE', 'Founding engineer'], ['USERS', '40k monthly'], ['SHIPPED', '11 months']] },
+  { num: 'C', year: '2025', name: 'KIOSK — RETAIL OS', blurb: 'Touch interface running on 1,200 in-store terminals.', stack: 'TS · PWA · OFFLINE', stars: 4,
+    body: 'Offline-first point-of-sale UI for physical stores. Designed for gloves, glare and flaky wifi — every action resolves locally and reconciles later.',
+    facts: [['ROLE', 'Front-end lead'], ['DEVICES', '1,200 terminals'], ['UPTIME', '99.98%']] },
+  { num: 'D', year: '2024', name: 'ATLAS — DATA VIZ', blurb: 'Map-heavy analytics for a logistics network.', stack: 'TS · DECK.GL · GIS', stars: 5,
+    body: 'Rendered half a million shipment paths at interactive framerates, with time scrubbing and route diffing that planners use daily.',
+    facts: [['ROLE', 'Senior engineer'], ['DATA', '500k routes'], ['SHIPPED', '7 months']] },
+  { num: 'E', year: '2024', name: 'SIGNAL — MARKETING SITE', blurb: 'Award-shortlisted site with a WebGL hero.', stack: 'ASTRO · GLSL', stars: 4,
+    body: 'A launch site where the hero is a shader you can push around. Static-generated, 98 Lighthouse, and it still runs on a five-year-old phone.',
+    facts: [['ROLE', 'Solo build'], ['LIGHTHOUSE', '98 / 100'], ['SHIPPED', '6 weeks']] },
+  { num: 'F', year: '2023', name: 'MULLET — THIS FACE', blurb: 'The sculptable low-poly head you are holding.', stack: 'THREE.JS', stars: 6,
+    body: 'A vertex-weighted soft-body sculpt toy in about 400 lines. Drag to pull the mesh, right-click to spring it back with an overshoot wobble. Yes, it is my actual haircut.',
+    facts: [['ROLE', 'Weekend'], ['PARTS', '41 meshes'], ['LOC', '~400']] },
+];
+
+const SKILLS = [
+  ['TYPESCRIPT', 0.95], ['REACT / NEXT', 0.92], ['WEBGL / GLSL', 0.74],
+  ['DESIGN SYS', 0.88], ['PERFORMANCE', 0.81],
+];
+
+class Component extends DCLogic {
+  state = { screen: 'boot', hover: null, sel: 0, detail: null, w: window.innerWidth, h: window.innerHeight };
+
+  componentDidMount() {
+    this.onResize = () => this.setState({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener('resize', this.onResize);
+    this.onKey = (e) => {
+      const { screen, sel, detail } = this.state;
+      if (e.key === 'Escape') {
+        if (detail !== null) this.setState({ detail: null });
+        else if (screen !== 'boot') this.setState({ screen: 'boot' });
+        return;
+      }
+      if (e.key === 'Enter') {
+        if (screen === 'boot') this.setState({ screen: 'work' });
+        else if (screen === 'work' && detail === null) this.setState({ detail: sel });
+        return;
+      }
+      if (screen !== 'work' || detail !== null) return;
+      const cols = this.state.w < 720 ? 1 : 3;
+      const map = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: cols, ArrowUp: -cols };
+      const d = map[e.key];
+      if (d) {
+        e.preventDefault();
+        this.setState({ sel: (sel + d + PROJECTS.length) % PROJECTS.length });
+      }
+    };
+    window.addEventListener('keydown', this.onKey);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('keydown', this.onKey);
+    window.removeEventListener('resize', this.onResize);
+  }
+
+  go(screen) { this.setState({ screen, detail: null }); }
+
+  renderVals() {
+    const { screen, hover, sel, detail, w } = this.state;
+    const on = (s) => screen === s;
+    const m = w < 720;               // phone
+    const touch = m || matchMedia('(pointer: coarse)').matches;
+
+    // background watermark: fewer, smaller marks on phone
+    const words = ['DEV', '64'];
+    const count = m ? 12 : 16;
+    const marks = Array.from({ length: count }, (_, i) => ({
+      t: words[(i + Math.floor(i / (m ? 3 : 4))) % 2],
+      style: `font-size:${m ? 18 : 30}px;color:#5b62d8;text-shadow:0 3px 0 #2a2e8a`,
+    }));
+
+    // nav: top-right on desktop, thumb-reach bottom bar on phone
+    const navItems = [['WORK', 'work'], ['ABOUT', 'about'], ['CONTACT', 'contact']].map(([label, key]) => ({
+      label,
+      go: () => this.go(key),
+      hover: () => this.setState({ hover: key }),
+      style: m
+        ? `flex:1;display:flex;align-items:center;justify-content:center;min-height:52px;font-size:10px;letter-spacing:1px;cursor:pointer;color:${screen === key ? '#05050e' : '#9aa2e8'};background:${screen === key ? '#ffd23f' : 'transparent'}`
+        : `cursor:pointer;padding-bottom:5px;border-bottom:3px solid ${screen === key ? '#ffd23f' : 'transparent'};color:${screen === key || hover === key ? '#ffd23f' : '#9aa2e8'}`,
+    }));
+
+    // face placement per screen and per device
+    const face = m ? {
+      boot: 'position:absolute;left:0;right:0;top:14vh;height:50vh;z-index:3',
+      work: 'position:absolute;left:0;right:0;top:12vh;height:40vh;opacity:.13;z-index:1;pointer-events:none',
+      about: 'position:absolute;left:0;right:0;top:8vh;height:34vh;z-index:3',
+      contact: 'position:absolute;left:0;right:0;top:10vh;height:40vh;z-index:3',
+    } : {
+      boot: 'position:absolute;left:0;right:0;top:9vh;height:74vh;z-index:3',
+      work: 'position:absolute;left:0;right:0;top:6vh;height:52vh;opacity:.16;z-index:1;pointer-events:none',
+      about: 'position:absolute;right:-4vw;top:2vh;width:52vw;height:88vh;z-index:3',
+      contact: 'position:absolute;left:0;right:0;top:-4vh;height:74vh;z-index:3',
+    };
+
+    const projects = PROJECTS.map((p, i) => {
+      const active = i === sel || hover === 'p' + i;
+      return {
+        ...p,
+        stars: Array.from({ length: 6 }, (_, k) => ({
+          style: `font-size:13px;color:${k < p.stars ? '#ffd23f' : '#2b3184'}`,
+        })),
+        style: `display:flex;flex-direction:column;gap:9px;padding:${m ? '16px 16px' : '15px 17px'};cursor:pointer;background:${active ? 'rgba(48,56,190,.92)' : 'rgba(12,14,58,.86)'};border:3px solid ${active ? '#ffd23f' : '#3b45b8'};box-shadow:0 6px 0 ${active ? '#7a5f00' : '#141a63'};transform:translateY(${active ? '-4px' : '0'});transition:transform .12s`,
+        open: () => this.setState({ detail: i, sel: i }),
+        hover: () => this.setState({ hover: 'p' + i, sel: i }),
+      };
+    });
+
+    const d = detail === null ? null : PROJECTS[detail];
+    const title = `flex:none;font-size:${m ? 11 : 13}px;letter-spacing:3px;color:#ffd23f;text-shadow:0 3px 0 #4a3200;text-align:center`;
+    const bottomSafe = m ? 68 : 0;   // room for the phone nav bar
+
+    return {
+      isBoot: on('boot'), isWork: on('work') && detail === null, isAbout: on('about'),
+      isContact: on('contact'), isDetail: detail !== null,
+      marks,
+      watermarkStyle: `position:absolute;inset:0;display:grid;grid-template-columns:repeat(${m ? 3 : 4},1fr);grid-auto-rows:${m ? 18 : 22}vh;place-items:center;animation:swell 6s ease-in-out infinite;pointer-events:none`,
+      nav: navItems,
+      navStyle: m
+        ? 'position:absolute;left:0;right:0;bottom:0;z-index:12;display:flex;background:rgba(7,8,32,.94);border-top:3px solid #3b45b8'
+        : 'position:absolute;top:34px;right:44px;z-index:8;display:flex;gap:22px;font-size:9px;letter-spacing:1px',
+      brandStyle: m
+        ? 'position:absolute;top:20px;left:0;right:0;z-index:8;display:flex;flex-direction:column;align-items:center;gap:9px;padding:0 16px;text-align:center'
+        : 'position:absolute;top:34px;left:44px;z-index:8;display:flex;flex-direction:column;gap:11px',
+      brandNameStyle: `font-size:${m ? 13 : 15}px;color:#ffd23f;text-shadow:0 3px 0 #4a3200;cursor:pointer`,
+      brandSubStyle: `font-size:${m ? 7 : 9}px;letter-spacing:2px;line-height:1.7;color:#9aa2e8`,
+
+      faceStyle: face[screen] || face.boot,
+
+      bootStyle: `position:absolute;left:0;right:0;bottom:${m ? bottomSafe + 24 : 64}px;z-index:8;display:flex;flex-direction:column;align-items:center;gap:${m ? 14 : 20}px;padding:0 20px`,
+      pressStyle: `font-size:${m ? 20 : 26}px;color:#ff4d4d;text-shadow:0 4px 0 #3a0000`,
+      startStyle: `font-size:${m ? 20 : 26}px;color:#ffd23f;text-shadow:0 4px 0 #4a3200`,
+      bootHintStyle: `font-size:${m ? 7 : 9}px;letter-spacing:1px;line-height:1.8;color:#8f97dd;text-align:center`,
+      bootHint: touch ? 'DRAG MY FACE · TWO-FINGER TAP RESETS' : 'DRAG MY FACE · RIGHT-CLICK RESETS · ENTER TO BEGIN',
+
+      workStyle: `position:absolute;left:0;right:0;top:${m ? 96 : 106}px;bottom:${m ? bottomSafe + 8 : 56}px;z-index:8;display:flex;flex-direction:column;align-items:center;gap:${m ? 12 : 18}px;padding:0 ${m ? 16 : 44}px;box-sizing:border-box;animation:fadein .28s ease-out`,
+      sectionTitleStyle: title,
+      gridStyle: `flex:1;min-height:0;width:100%;max-width:1000px;overflow:auto;-webkit-overflow-scrolling:touch;display:grid;grid-template-columns:repeat(${m ? 1 : 3},minmax(0,1fr));grid-auto-rows:min-content;gap:${m ? 12 : 16}px;padding:2px 4px 8px;box-sizing:border-box`,
+      workHintStyle: `flex:none;font-size:${m ? 7 : 9}px;color:#8f97dd;letter-spacing:1px;text-align:center;line-height:1.7`,
+      workHint: touch ? 'TAP A FILE TO OPEN · SCROLL FOR MORE' : '↑ ↓ ← → TO MOVE · ENTER TO OPEN · ESC TO GO BACK',
+      projects,
+
+      detail: d && { ...d, facts: d.facts.map(([k, v]) => ({ k, v })) },
+      detailWrapStyle: `position:absolute;left:0;right:0;top:${m ? 12 : 110}px;bottom:${m ? bottomSafe + 12 : 60}px;z-index:9;display:flex;justify-content:center;padding:0 ${m ? 12 : 0}px;box-sizing:border-box;animation:fadein .28s ease-out`,
+      detailPanelStyle: `width:${m ? '100%' : '820px'};max-width:${m ? '100%' : '88vw'};padding:${m ? '20px 18px' : '36px 40px'};background:rgba(9,10,38,.96);border:3px solid #3b45b8;box-shadow:0 0 0 3px #0a0b26, 0 24px 60px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:${m ? 16 : 22}px;overflow:auto;-webkit-overflow-scrolling:touch;box-sizing:border-box`,
+      detailTitleStyle: `font-size:${m ? 14 : 22}px;line-height:1.5;color:#fff;text-shadow:0 3px 0 #1b1f6b`,
+      detailBodyStyle: `font-family:'JetBrains Mono',monospace;font-size:${m ? 13 : 15}px;line-height:1.75;color:#c2c9f5`,
+      factsStyle: `display:grid;grid-template-columns:repeat(${m ? 1 : 3},1fr);gap:${m ? 14 : 18}px;padding-top:${m ? 14 : 18}px;border-top:2px solid #2a3090`,
+      closeStyle: `font-size:9px;letter-spacing:1px;color:#8f97dd;cursor:pointer;flex:none;display:inline-flex;align-items:center;justify-content:center;${m ? 'min-height:48px;padding:0 16px;border:2px solid #3b45b8' : 'padding:2px 0;border:none'}`,
+      closeLabel: touch ? 'CLOSE ✕' : '[ESC] CLOSE',
+
+      aboutStyle: m
+        ? `position:absolute;left:0;right:0;top:44vh;bottom:${bottomSafe + 8}px;z-index:8;display:flex;flex-direction:column;gap:16px;padding:0 18px;overflow:auto;-webkit-overflow-scrolling:touch;box-sizing:border-box;animation:fadein .28s ease-out`
+        : 'position:absolute;left:7vw;top:150px;width:520px;z-index:8;display:flex;flex-direction:column;gap:24px;animation:fadein .28s ease-out',
+      aboutBodyStyle: `font-family:'JetBrains Mono',monospace;font-size:${m ? 13 : 16}px;line-height:1.8;color:#c8cff8`,
+      skills: SKILLS.map(([k, v]) => ({
+        k,
+        row: `display:flex;align-items:center;gap:${m ? 10 : 14}px`,
+        label: `width:${m ? 88 : 120}px;flex:none;font-size:${m ? 7 : 9}px;letter-spacing:1px;color:#9aa2e8`,
+        bar: `height:100%;width:${v * 100}%;background:#ffd23f`,
+      })),
+
+      contactStyle: `position:absolute;left:0;right:0;bottom:${m ? bottomSafe + 20 : '12vh'}${m ? 'px' : ''};z-index:8;display:flex;flex-direction:column;align-items:center;gap:${m ? 16 : 22}px;padding:0 18px;box-sizing:border-box;animation:fadein .28s ease-out`,
+      contactRowStyle: m
+        ? 'display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px'
+        : 'display:flex;gap:16px',
+      ctaPrimary: `display:flex;align-items:center;justify-content:center;min-height:${m ? 52 : 0}px;padding:16px 24px;font-size:11px;letter-spacing:1px;color:#05050e;background:#ffd23f;box-shadow:0 5px 0 #7a5f00`,
+      ctaSecondary: `display:flex;align-items:center;justify-content:center;min-height:${m ? 52 : 0}px;padding:16px 24px;font-size:11px;letter-spacing:1px;color:#dfe3ff;background:#242a9e;box-shadow:0 5px 0 #10144f`,
+
+      statusLabel: { boot: 'TITLE SCREEN', work: 'FILE SELECT', about: 'PROFILE', contact: 'CONTINUE?' }[screen],
+      inputHint: touch ? 'DRAG = SCULPT' : 'DRAG = SCULPT · RIGHT-CLICK = RESET',
+      statusStyle: `position:absolute;left:${m ? 16 : 44}px;bottom:${m ? bottomSafe + 6 : 30}px;z-index:8;gap:${m ? 12 : 20}px;font-size:${m ? 7 : 8}px;letter-spacing:1px;color:#6e77c4;display:${on('work') || (m && (on('about') || on('contact'))) ? 'none' : 'flex'}`,
+
+      start: () => this.go('work'),
+      goHome: () => this.go('boot'),
+      back: () => this.setState({ detail: null }),
+    };
+  }
+}
+
+</script>
+</body>
+</html>
