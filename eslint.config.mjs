@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Design-handoff reference material — prototype scaffolding, not project
+    // source. Never ported (see CLAUDE.md), so never linted.
+    "docs/**",
   ]),
 ]);
 

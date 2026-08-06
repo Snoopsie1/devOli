@@ -189,7 +189,17 @@ Right-click (`contextmenu`, prevented) or `touchstart` with `>1` touches trigger
 | Drag on empty space | orbit with inertia |
 | Right-click / two-finger tap | reset with wobble |
 
-Screen transitions use the `fadein` keyframe (`.28s ease-out`). Nothing else animates on route change — the head persists and simply re-lays-out.
+Screen transitions use the `fadein` keyframe (`.28s ease-out`) on enter.
+
+> **Owner extension (2026-08-06, deviates from the original handoff):** screens
+> now also animate OUT — the outgoing screen plays `fadeout` (`.22s ease-in`,
+> sinks down + fades) while the incoming one plays `fadein`, giving a crossfade.
+> The head no longer snaps between screen positions: its wrapper carries a
+> `transition` on `left/top/width/height/opacity` (`.34s`/`.28s ease-out`) so it
+> glides. Placements are normalised to `vw`/`vh` (no `auto`) so every edge
+> interpolates; the glide uses real geometry, never `transform: scale`, so the
+> pixel-crunch buffer stays correctly sized. The head still never unmounts and
+> sculpt state still persists. `prefers-reduced-motion: reduce` zeroes all of it.
 
 ## State Management
 
