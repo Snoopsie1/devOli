@@ -273,6 +273,11 @@ export function createSculptFace(host: HTMLElement, options: SculptFaceOptions =
   let springK = 1;
   let springV = 0;
   const clock = new THREE.Clock();
+  // Double-tap / double-click reset tracking (unified for mouse + touch).
+  let downPt: { x: number; y: number; t: number } | null = null;
+  let lastTapT = -Infinity;
+  let lastTapX = 0;
+  let lastTapY = 0;
 
   function ndc(e: { clientX: number; clientY: number }): THREE.Vector2 {
     const r = canvas.getBoundingClientRect();
@@ -289,6 +294,7 @@ export function createSculptFace(host: HTMLElement, options: SculptFaceOptions =
   function onDown(e: PointerEvent): void {
     if (e.button === 2) return;
     resetT = 0;
+    downPt = { x: e.clientX, y: e.clientY, t: e.timeStamp };
     raycaster.setFromCamera(ndc(e), camera);
     const hits = raycaster.intersectObjects(pickable, false);
     if (hits.length) {
@@ -318,7 +324,8 @@ export function createSculptFace(host: HTMLElement, options: SculptFaceOptions =
     }
   }
 
-  function onUp(): void {
+  function onUp(e: PointerEvent): void {
+    const dragged = !!(grab && grab.dir);
     if (grab && grab.dir) {
       // bake the current stretch in
       const r = brush, d = grab.dir, g = grab.local;
@@ -333,15 +340,28 @@ export function createSculptFace(host: HTMLElement, options: SculptFaceOptions =
     grab = null;
     orbit = null;
     canvas.style.cursor = 'grab';
+
+    // Double-tap (touch) / double-click (mouse) resets. A "tap" is a quick
+    // press that did NOT drag (no sculpt, negligible movement); two of them
+    // within 350ms and close together fire the springy reset.
+    const moved = downPt ? Math.hypot(e.clientX - downPt.x, e.clientY - downPt.y) : Infinity;
+    const held = downPt ? e.timeStamp - downPt.t : Infinity;
+    const isTap = !dragged && moved < 10 && held < 400;
+    downPt = null;
+    if (!isTap) { lastTapT = -Infinity; return; }
+    if (e.timeStamp - lastTapT < 350 && Math.hypot(e.clientX - lastTapX, e.clientY - lastTapY) < 44) {
+      reset();
+      lastTapT = -Infinity; // consume, so a third tap doesn't reset again
+    } else {
+      lastTapT = e.timeStamp;
+      lastTapX = e.clientX;
+      lastTapY = e.clientY;
+    }
   }
 
   function onContext(e: MouseEvent): void {
+    // Reset moved to double-click; still suppress the browser menu over the toy.
     e.preventDefault();
-    reset();
-  }
-
-  function onTouch(e: TouchEvent): void {
-    if (e.touches.length > 1) reset();
   }
 
   function reset(): void {
@@ -424,8 +444,6 @@ export function createSculptFace(host: HTMLElement, options: SculptFaceOptions =
   window.addEventListener('pointermove', onMove);
   window.addEventListener('pointerup', onUp);
   canvas.addEventListener('contextmenu', onContext);
-  // touch: a second finger down resets (right-click has no touch equivalent)
-  canvas.addEventListener('touchstart', onTouch, { passive: true });
 
   const ro = new ResizeObserver(() => resize());
   ro.observe(host);
@@ -447,7 +465,6 @@ export function createSculptFace(host: HTMLElement, options: SculptFaceOptions =
     window.removeEventListener('pointermove', onMove);
     window.removeEventListener('pointerup', onUp);
     canvas.removeEventListener('contextmenu', onContext);
-    canvas.removeEventListener('touchstart', onTouch);
     scene.traverse((o) => {
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh) return;

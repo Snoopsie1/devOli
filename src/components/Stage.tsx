@@ -227,7 +227,7 @@ export default function Stage() {
   const pressStyle = `font-size:${m ? 20 : 26}px;color:#ff4d4d;text-shadow:0 4px 0 #3a0000`;
   const startStyle = `font-size:${m ? 20 : 26}px;color:#ffd23f;text-shadow:0 4px 0 #4a3200`;
   const bootHintStyle = `font-size:${m ? 7 : 9}px;letter-spacing:1px;line-height:1.8;color:#8f97dd;text-align:center`;
-  const bootHint = touch ? 'DRAG MY FACE · TWO-FINGER TAP RESETS' : 'DRAG MY FACE · RIGHT-CLICK RESETS · ENTER TO BEGIN';
+  const bootHint = touch ? 'DRAG MY FACE · DOUBLE-TAP RESETS' : 'DRAG MY FACE · DOUBLE-CLICK RESETS · ENTER TO BEGIN';
 
   const workStyle = `position:absolute;left:0;right:0;top:${m ? 96 : 106}px;bottom:${m ? bottomSafe + 8 : 56}px;z-index:8;display:flex;flex-direction:column;align-items:center;gap:${m ? 12 : 18}px;padding:0 ${m ? 16 : 44}px;box-sizing:border-box`;
   const gridStyle = `flex:1;min-height:0;width:100%;max-width:1000px;overflow:auto;-webkit-overflow-scrolling:touch;display:grid;grid-template-columns:repeat(${m ? 1 : 3},minmax(0,1fr));grid-auto-rows:min-content;gap:${m ? 12 : 16}px;padding:2px 4px 8px;box-sizing:border-box`;
@@ -279,7 +279,7 @@ export default function Stage() {
       <SculptFace
         skin="#e3ab7f"
         brush={0.52}
-        pixel={0.7}
+        pixel={0.3}
         cameraZ={cameraZ}
         ariaLabel="Sculptable low-poly 3D head"
         style={css(faceByScreen[screen])}

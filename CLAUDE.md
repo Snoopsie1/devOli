@@ -26,12 +26,12 @@ no Tailwind — bespoke pixel styles. Fonts via `next/font/google` (Press Start
 
 - The 3D head component never unmounts between screens — sculpt state must
   persist. It only moves/resizes/fades via style.
-- The low-res pixelated render (pixelScale 0.7, `setPixelRatio(1)`,
+- The low-res pixelated render (pixelScale 0.3, `setPixelRatio(1)`,
   `image-rendering: pixelated`, flat shading) is deliberate. Don't "fix" it.
 - 3D is client-only: dynamic import with `ssr: false`, guard
   `window`/`matchMedia` for SSR.
 - Breakpoint `w < 720` = mobile. Mobile is first-class: bottom nav, ≥44px
-  touch targets, coarse-pointer copy, two-finger-tap reset.
+  touch targets, coarse-pointer copy, double-tap reset.
 - Border radius is always 0. Hard offset shadows only.
 - No data fetching — `PROJECTS` and `SKILLS` are static arrays. Handoff copy
   is placeholder until replaced with real projects.
