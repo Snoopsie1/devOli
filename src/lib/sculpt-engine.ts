@@ -5,10 +5,12 @@ import * as THREE from 'three';
  * docs/design-handoff/reference/sculpt-face.js.
  *
  * The geometry constants and the sculpt/reset math are copied verbatim from
- * the reference (per the design contract). The only structural change is that
- * the `<sculpt-face>` custom element is replaced by a `createSculptFace`
- * factory so a React component can own the DOM node, plus a real `dispose`
- * that removes the window-level pointer listeners the reference leaked.
+ * the reference (per the design contract). Structural changes: the
+ * `<sculpt-face>` custom element is replaced by a `createSculptFace` factory so
+ * a React component can own the DOM node, plus a real `dispose` that removes the
+ * window-level pointer listeners the reference leaked. Deliberate deviation: the
+ * camera sits further back than the reference (z 7.2 vs 5.4) so the full-bleed
+ * title head keeps vertical margin to stretch into without clipping the frame.
  */
 
 const TAU = Math.PI * 2;
@@ -223,7 +225,10 @@ export function createSculptFace(host: HTMLElement, options: SculptFaceOptions =
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: true, preserveDrawingBuffer: true });
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
-  camera.position.set(0, 0.12, 5.4);
+  // z=7.2 (reference: 5.4) — pulled back ×4/3 so the head fills ~2/3 of the
+  // full-bleed frame, leaving vertical margin for stretch-sculpts before the
+  // mesh reaches the viewport edge. See faceByScreen: rect heights scale to match.
+  camera.position.set(0, 0.12, 7.2);
   camera.lookAt(0, 0.12, 0);
 
   scene.add(new THREE.AmbientLight(0xa9b6d0, 0.75));

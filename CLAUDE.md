@@ -26,7 +26,7 @@ no Tailwind — bespoke pixel styles. Fonts via `next/font/google` (Press Start
 
 - The 3D head component never unmounts between screens — sculpt state must
   persist. It only moves/resizes/fades via style.
-- The low-res pixelated render (pixelScale 0.42, `setPixelRatio(1)`,
+- The low-res pixelated render (pixelScale 0.7, `setPixelRatio(1)`,
   `image-rendering: pixelated`, flat shading) is deliberate. Don't "fix" it.
 - 3D is client-only: dynamic import with `ssr: false`, guard
   `window`/`matchMedia` for SSR.

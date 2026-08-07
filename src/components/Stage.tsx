@@ -176,16 +176,16 @@ export default function Stage() {
   const faceGlide = 'transition:left .34s ease-out,top .34s ease-out,width .34s ease-out,height .34s ease-out,opacity .28s ease-out';
   const faceByScreen: Record<Screen, string> = m
     ? {
-        boot: `position:absolute;left:0;width:100vw;top:14vh;height:50vh;opacity:1;z-index:3;${faceGlide}`,
-        work: `position:absolute;left:0;width:100vw;top:12vh;height:40vh;opacity:.13;z-index:1;pointer-events:none;${faceGlide}`,
-        about: `position:absolute;left:0;width:100vw;top:8vh;height:34vh;opacity:1;z-index:3;${faceGlide}`,
-        contact: `position:absolute;left:0;width:100vw;top:10vh;height:40vh;opacity:1;z-index:3;${faceGlide}`,
+        boot: `position:absolute;left:0;width:100vw;top:3dvh;height:76dvh;opacity:1;z-index:3;${faceGlide}`,
+        work: `position:absolute;left:0;width:100vw;top:5vh;height:53vh;opacity:.13;z-index:1;pointer-events:none;${faceGlide}`,
+        about: `position:absolute;left:0;width:100vw;top:2vh;height:45vh;opacity:1;z-index:3;${faceGlide}`,
+        contact: `position:absolute;left:0;width:100vw;top:3vh;height:53vh;opacity:1;z-index:3;${faceGlide}`,
       }
     : {
-        boot: `position:absolute;left:0;width:100vw;top:9vh;height:74vh;opacity:1;z-index:3;${faceGlide}`,
-        work: `position:absolute;left:0;width:100vw;top:6vh;height:52vh;opacity:.16;z-index:1;pointer-events:none;${faceGlide}`,
-        about: `position:absolute;left:52vw;width:52vw;top:2vh;height:88vh;opacity:1;z-index:3;${faceGlide}`,
-        contact: `position:absolute;left:0;width:100vw;top:-4vh;height:74vh;opacity:1;z-index:3;${faceGlide}`,
+        boot: `position:absolute;left:0;width:100vw;top:0;height:100dvh;opacity:1;z-index:3;${faceGlide}`,
+        work: `position:absolute;left:0;width:100vw;top:-3vh;height:70vh;opacity:.16;z-index:1;pointer-events:none;${faceGlide}`,
+        about: `position:absolute;left:52vw;width:52vw;top:-13vh;height:117vh;opacity:1;z-index:3;${faceGlide}`,
+        contact: `position:absolute;left:0;width:100vw;top:-16vh;height:99vh;opacity:1;z-index:3;${faceGlide}`,
       };
 
   const navItems: [string, Screen][] = [['WORK', 'work'], ['ABOUT', 'about'], ['CONTACT', 'contact']];
@@ -209,7 +209,7 @@ export default function Stage() {
     ? 'position:absolute;top:20px;left:0;right:0;z-index:8;display:flex;flex-direction:column;align-items:center;gap:9px;padding:0 16px;text-align:center'
     : 'position:absolute;top:34px;left:44px;z-index:8;display:flex;flex-direction:column;gap:11px';
   // font-weight:400 — Press Start 2P has one weight; an <h1>'s UA bold would synthesize a heavier face.
-  const brandNameStyle = `font-size:${m ? 16 : 20}px;font-weight:400;color:#ffd23f;text-shadow:0 3px 0 #4a3200`;
+  const brandNameStyle = `font-size:${m ? 22 : 20}px;font-weight:400;color:#ffd23f;text-shadow:0 3px 0 #4a3200`;
   const brandSubStyle = `font-size:${m ? 7 : 9}px;letter-spacing:2px;line-height:1.7;color:#9aa2e8`;
 
   const navStyle = m
@@ -249,10 +249,15 @@ export default function Stage() {
   // Compact secondary button reused for the per-project links inside the detail panel.
   const detailLinkStyle = `display:inline-flex;align-items:center;justify-content:center;min-height:${m ? 44 : 0}px;padding:${m ? '12px 18px' : '10px 16px'};font-size:10px;letter-spacing:1px;color:#dfe3ff;background:#242a9e;box-shadow:0 4px 0 #10144f`;
 
-  const statusLabel = { boot: 'TITLE SCREEN', work: 'FILE SELECT', about: 'PROFILE', contact: 'CONTINUE?' }[screen];
-  const inputHint = touch ? 'DRAG = SCULPT' : 'DRAG = SCULPT · RIGHT-CLICK = RESET';
-  const statusHidden = screen === 'work' || (m && (screen === 'about' || screen === 'contact'));
-  const statusStyle = `position:absolute;left:${m ? 16 : 44}px;bottom:${m ? bottomSafe + 6 : 30}px;z-index:8;gap:${m ? 12 : 20}px;font-size:${m ? 7 : 8}px;letter-spacing:1px;color:#6e77c4;display:${statusHidden ? 'none' : 'flex'}`;
+  // Desktop-only: magnify the whole UI layer (brand, nav, all screens) by 1.4×,
+  // like a 140% browser zoom, WITHOUT touching the 3D head (it lives outside
+  // this wrapper). The box is pre-shrunk to 100vw/1.4 so `zoom` renders it back
+  // to exactly the viewport. `pointer-events:none` lets face-drags fall through
+  // the transparent gaps to the head; interactive groups re-enable it below.
+  const UI_SCALE = 1.4;
+  const uiWrapStyle = m
+    ? 'display:contents'
+    : `position:absolute;top:0;left:0;width:calc(100vw / ${UI_SCALE});height:calc(100dvh / ${UI_SCALE});z-index:5;zoom:${UI_SCALE};pointer-events:none`;
 
   return (
     <div style={rootStyle}>
@@ -267,13 +272,15 @@ export default function Stage() {
       <SculptFace
         skin="#e3ab7f"
         brush={0.52}
-        pixel={0.42}
+        pixel={0.7}
         ariaLabel="Sculptable low-poly 3D head"
         style={css(faceByScreen[screen])}
       />
 
+      {/* UI layer — desktop-zoomed 1.4×, head excluded (it's a root sibling above) */}
+      <div style={css(uiWrapStyle)}>
       {/* brand */}
-      <div style={css(brandStyle)}>
+      <div style={css(brandStyle + ';pointer-events:auto')}>
         <h1 style={css(brandNameStyle)}>
           <button type="button" onClick={() => go('boot')} style={{ cursor: 'pointer' }}>{SITE.name}</button>
         </h1>
@@ -281,7 +288,7 @@ export default function Stage() {
       </div>
 
       {/* nav */}
-      <nav aria-label="Main menu" style={css(navStyle)}>
+      <nav aria-label="Main menu" style={css(navStyle + ';pointer-events:auto')}>
         {navItems.map(([label, key]) => {
           const active = screen === key;
           const style = m
@@ -306,7 +313,7 @@ export default function Stage() {
       <main style={{ display: 'contents' }}>
         {/* boot / title */}
         {bootMode && (
-          <div style={css(`${bootStyle};${animCss(bootMode)}`)} inert={bootMode === 'out' ? true : undefined}>
+          <div style={css(`${bootStyle};${animCss(bootMode)};pointer-events:auto`)} inert={bootMode === 'out' ? true : undefined}>
             <button
               type="button"
               onClick={() => go('work')}
@@ -321,7 +328,7 @@ export default function Stage() {
 
         {/* work / file select */}
         {workMode && (
-          <div style={css(`${workStyle};${animCss(workMode)}`)} inert={workMode === 'out' ? true : undefined}>
+          <div style={css(`${workStyle};${animCss(workMode)};pointer-events:auto`)} inert={workMode === 'out' ? true : undefined}>
             <h2 style={css(sectionTitle)}>SELECT A FILE</h2>
             <div style={css(gridStyle)}>
               {PROJECTS.map((p, i) => {
@@ -362,7 +369,7 @@ export default function Stage() {
 
         {/* file detail */}
         {detailMode && d && (
-          <div style={css(`${detailWrapStyle};${animCss(detailMode)}`)} inert={detailMode === 'out' ? true : undefined}>
+          <div style={css(`${detailWrapStyle};${animCss(detailMode)};pointer-events:auto`)} inert={detailMode === 'out' ? true : undefined}>
             <div style={css(detailPanelStyle)} role="dialog" aria-labelledby="detail-title">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
                 <span style={{ fontSize: '9px', letterSpacing: '2px', color: '#ffd23f' }}>FILE {d.num} · {d.year}</span>
@@ -391,7 +398,7 @@ export default function Stage() {
 
         {/* about / player profile */}
         {aboutMode && (
-          <div style={css(`${aboutStyle};${animCss(aboutMode)}`)} inert={aboutMode === 'out' ? true : undefined}>
+          <div style={css(`${aboutStyle};${animCss(aboutMode)};pointer-events:auto`)} inert={aboutMode === 'out' ? true : undefined}>
             <h2 style={css(sectionTitle)}>PLAYER PROFILE</h2>
             <span style={css(aboutBodyStyle)}>{SITE.bio}</span>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -409,7 +416,7 @@ export default function Stage() {
 
         {/* contact / continue */}
         {contactMode && (
-          <div style={css(`${contactStyle};${animCss(contactMode)}`)} inert={contactMode === 'out' ? true : undefined}>
+          <div style={css(`${contactStyle};${animCss(contactMode)};pointer-events:auto`)} inert={contactMode === 'out' ? true : undefined}>
             <h2 style={css(sectionTitle)}>CONTINUE?</h2>
             <div style={css(contactRowStyle)}>
               {SITE.email && <a href={`mailto:${SITE.email}`} style={css(ctaPrimary)}>EMAIL ME</a>}
@@ -424,11 +431,6 @@ export default function Stage() {
           </div>
         )}
       </main>
-
-      {/* status bar (decorative telemetry) */}
-      <div style={css(statusStyle)} aria-hidden="true">
-        <span>{statusLabel}</span>
-        <span>{inputHint}</span>
       </div>
 
       {/* scanlines */}
