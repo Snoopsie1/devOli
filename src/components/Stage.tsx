@@ -60,6 +60,10 @@ export default function Stage() {
   const m = useMediaQuery('(max-width: 719px)'); // phone (w < 720)
   const coarse = useMediaQuery('(pointer: coarse)');
   const touch = m || coarse;
+  // Camera pulled further back on phones so the full-bleed head is small enough
+  // that the ears clear the narrow screen edges. Depends only on `m`, so it never
+  // changes while navigating screens (no per-screen glide pump).
+  const cameraZ = m ? 9.5 : 7.2;
 
   const currentView: View = detail !== null ? 'detail' : screen;
 
@@ -176,10 +180,13 @@ export default function Stage() {
   const faceGlide = 'transition:left .34s ease-out,top .34s ease-out,width .34s ease-out,height .34s ease-out,opacity .28s ease-out';
   const faceByScreen: Record<Screen, string> = m
     ? {
-        boot: `position:absolute;left:0;width:100vw;top:3dvh;height:76dvh;opacity:1;z-index:3;${faceGlide}`,
-        work: `position:absolute;left:0;width:100vw;top:5vh;height:53vh;opacity:.13;z-index:1;pointer-events:none;${faceGlide}`,
-        about: `position:absolute;left:0;width:100vw;top:2vh;height:45vh;opacity:1;z-index:3;${faceGlide}`,
-        contact: `position:absolute;left:0;width:100vw;top:3vh;height:53vh;opacity:1;z-index:3;${faceGlide}`,
+        // Full-bleed boot (no visible canvas edge → downward stretch-sculpts
+        // never clip mid-screen). Other screens' heights are scaled ×9.5/7.2 to
+        // offset the mobile camera pull-back, centers preserved.
+        boot: `position:absolute;left:0;width:100vw;top:0;height:100dvh;opacity:1;z-index:3;${faceGlide}`,
+        work: `position:absolute;left:0;width:100vw;top:-3.5vh;height:70vh;opacity:.13;z-index:1;pointer-events:none;${faceGlide}`,
+        about: `position:absolute;left:0;width:100vw;top:-5vh;height:59vh;opacity:1;z-index:3;${faceGlide}`,
+        contact: `position:absolute;left:0;width:100vw;top:-5.5vh;height:70vh;opacity:1;z-index:3;${faceGlide}`,
       }
     : {
         boot: `position:absolute;left:0;width:100vw;top:0;height:100dvh;opacity:1;z-index:3;${faceGlide}`,
@@ -273,6 +280,7 @@ export default function Stage() {
         skin="#e3ab7f"
         brush={0.52}
         pixel={0.7}
+        cameraZ={cameraZ}
         ariaLabel="Sculptable low-poly 3D head"
         style={css(faceByScreen[screen])}
       />

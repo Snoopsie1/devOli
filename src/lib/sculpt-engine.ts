@@ -9,8 +9,10 @@ import * as THREE from 'three';
  * `<sculpt-face>` custom element is replaced by a `createSculptFace` factory so
  * a React component can own the DOM node, plus a real `dispose` that removes the
  * window-level pointer listeners the reference leaked. Deliberate deviation: the
- * camera sits further back than the reference (z 7.2 vs 5.4) so the full-bleed
- * title head keeps vertical margin to stretch into without clipping the frame.
+ * camera sits further back than the reference (z 5.4) and is now device-dependent
+ * — 7.2 on desktop, 9.5 on mobile — so the full-bleed head keeps vertical margin
+ * to stretch into and, on narrow phones, is small enough that the ears clear the
+ * screen edges. Distance is a live prop (`setCameraZ`); the head never remounts.
  */
 
 const TAU = Math.PI * 2;
@@ -189,10 +191,14 @@ export interface SculptFaceOptions {
   skin?: string;
   brush?: number;
   pixel?: number;
+  /** Camera distance on the z axis. Larger = head appears smaller. */
+  cameraZ?: number;
 }
 
 export interface SculptFaceHandle {
   dispose(): void;
+  /** Move the camera in/out live (head stays mounted, sculpt state persists). */
+  setCameraZ(z: number): void;
 }
 
 interface Part {
@@ -214,6 +220,7 @@ export function createSculptFace(host: HTMLElement, options: SculptFaceOptions =
   const skin = options.skin ?? '#e3ab7f';
   const brush = options.brush ?? 0.52;
   const pixelScale = options.pixel ?? 0.42;
+  const cameraZ = options.cameraZ ?? 7.2;
 
   host.style.display = 'block';
   if (!host.style.position) host.style.position = 'relative';
@@ -225,10 +232,10 @@ export function createSculptFace(host: HTMLElement, options: SculptFaceOptions =
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: true, preserveDrawingBuffer: true });
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
-  // z=7.2 (reference: 5.4) — pulled back ×4/3 so the head fills ~2/3 of the
-  // full-bleed frame, leaving vertical margin for stretch-sculpts before the
-  // mesh reaches the viewport edge. See faceByScreen: rect heights scale to match.
-  camera.position.set(0, 0.12, 7.2);
+  // Pulled back from the reference (5.4) so the full-bleed head has stretch
+  // margin; distance is device-dependent (desktop 7.2 / mobile 9.5) and can
+  // change live via setCameraZ. See faceByScreen: rect heights scale to match.
+  camera.position.set(0, 0.12, cameraZ);
   camera.lookAt(0, 0.12, 0);
 
   scene.add(new THREE.AmbientLight(0xa9b6d0, 0.75));
@@ -426,6 +433,13 @@ export function createSculptFace(host: HTMLElement, options: SculptFaceOptions =
 
   renderer.setAnimationLoop(tick);
 
+  function setCameraZ(z: number): void {
+    camera.position.z = z;
+    // Refresh the world matrix so a raycast in this same tick isn't stale
+    // (setFromCamera reads camera.matrixWorld without updating it).
+    camera.updateMatrixWorld();
+  }
+
   function dispose(): void {
     renderer.setAnimationLoop(null);
     ro.disconnect();
@@ -447,5 +461,5 @@ export function createSculptFace(host: HTMLElement, options: SculptFaceOptions =
     if (canvas.parentNode === host) host.removeChild(canvas);
   }
 
-  return { dispose };
+  return { dispose, setCameraZ };
 }

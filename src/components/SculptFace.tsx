@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { createSculptFace, type SculptFaceOptions } from '@/lib/sculpt-engine';
+import { createSculptFace, type SculptFaceHandle, type SculptFaceOptions } from '@/lib/sculpt-engine';
 
 type SculptFaceProps = SculptFaceOptions & {
   className?: string;
@@ -15,17 +15,31 @@ type SculptFaceProps = SculptFaceOptions & {
  * sculpt state persists across every screen change — the parent only mutates
  * this host div's style. Never give this component a `key` that changes.
  */
-export default function SculptFace({ skin, brush, pixel, className, style, ariaLabel }: SculptFaceProps) {
+export default function SculptFace({ skin, brush, pixel, cameraZ, className, style, ariaLabel }: SculptFaceProps) {
   const hostRef = useRef<HTMLDivElement>(null);
+  const handleRef = useRef<SculptFaceHandle | null>(null);
   // Freeze the options at first render — they must never re-init the engine.
-  const optsRef = useRef<SculptFaceOptions>({ skin, brush, pixel });
+  // (cameraZ is seeded here so the first render is at the right distance, then
+  // kept in sync live by the effect below — NOT via a remount.)
+  const optsRef = useRef<SculptFaceOptions>({ skin, brush, pixel, cameraZ });
 
+  // Mount once, never again. Deps MUST stay [] — the head persists across every
+  // screen and prop change; a remount would wipe sculpt state.
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
-    const handle = createSculptFace(host, optsRef.current);
-    return () => handle.dispose();
+    handleRef.current = createSculptFace(host, optsRef.current);
+    return () => {
+      handleRef.current?.dispose();
+      handleRef.current = null;
+    };
   }, []);
+
+  // Live-update the camera distance (e.g. when crossing the mobile breakpoint)
+  // without touching the mounted engine.
+  useEffect(() => {
+    if (cameraZ != null) handleRef.current?.setCameraZ(cameraZ);
+  }, [cameraZ]);
 
   return <div ref={hostRef} className={className} style={style} role={ariaLabel ? 'img' : undefined} aria-label={ariaLabel} />;
 }
