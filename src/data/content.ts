@@ -1,6 +1,6 @@
 // Real portfolio content for Oliver Rasoli. A few fields are best-effort and
-// flagged for the owner to confirm (Gymie's year, the NDA card's exact stack,
-// skill percentages are self-ratings). No data fetching — static arrays.
+// flagged for the owner to confirm (Gymie's year, skill percentages are
+// self-ratings). No data fetching — static arrays.
 
 export interface Project {
   num: string;
@@ -50,15 +50,8 @@ export const PROJECTS: Project[] = [
     blurb: 'The sculptable low-poly head you are holding.',
     stack: 'NEXT.JS · THREE.JS · TS', stars: 5,
     body: 'A single-page portfolio styled as an N64 title screen. The head is a real-time three.js mesh you can drag to deform and spring back with a wobble, about 400 lines of vertex-weighted soft-body math. Built with an agent-driven workflow.',
-    facts: [['ROLE', 'Solo build'], ['PARTS', '41 meshes'], ['BUILD', 'Agent-driven']],
+    facts: [['ROLE', 'Solo build'], ['PARTS', '44 meshes'], ['BUILD', 'Agent-driven']],
     links: [['LIVE', 'https://rasoli.dk'], ['CODE', 'https://github.com/Snoopsie1/devOli']],
-  },
-  {
-    num: 'C', year: '2025', name: 'CLIENT WORK — UNDER NDA',
-    blurb: 'Full-stack feature work on production web platforms.',
-    stack: 'TS · REACT · .NET', stars: 4,
-    body: 'Full-stack feature work on high-traffic production web apps as part of an engineering team. The specifics are under NDA, but I am happy to walk through the work, the tradeoffs, and the parts I owned.',
-    facts: [['ROLE', 'Full-stack engineer'], ['CONTEXT', 'Product team'], ['DETAILS', 'On request']],
   },
 ];
 

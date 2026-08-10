@@ -130,7 +130,7 @@ export default function Stage() {
         return;
       }
       if (screen !== 'work' || detail !== null) return;
-      const cols = m ? 1 : 3;
+      const cols = m ? 1 : Math.min(PROJECTS.length, 3);
       const map: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: cols, ArrowUp: -cols };
       const d = map[e.key];
       if (d) {
@@ -230,7 +230,7 @@ export default function Stage() {
   const bootHint = touch ? 'DRAG MY FACE · DOUBLE-TAP RESETS' : 'DRAG MY FACE · DOUBLE-CLICK RESETS · ENTER TO BEGIN';
 
   const workStyle = `position:absolute;left:0;right:0;top:${m ? 96 : 106}px;bottom:${m ? bottomSafe + 8 : 56}px;z-index:8;display:flex;flex-direction:column;align-items:center;gap:${m ? 12 : 18}px;padding:0 ${m ? 16 : 44}px;box-sizing:border-box`;
-  const gridStyle = `flex:1;min-height:0;width:100%;max-width:1000px;overflow:auto;-webkit-overflow-scrolling:touch;display:grid;grid-template-columns:repeat(${m ? 1 : 3},minmax(0,1fr));grid-auto-rows:min-content;gap:${m ? 12 : 16}px;padding:2px 4px 8px;box-sizing:border-box`;
+  const gridStyle = `flex:1;min-height:0;width:100%;max-width:1000px;overflow:auto;-webkit-overflow-scrolling:touch;display:grid;grid-template-columns:repeat(${m ? 1 : Math.min(PROJECTS.length, 3)},minmax(0,1fr));grid-auto-rows:min-content;gap:${m ? 12 : 16}px;padding:2px 4px 8px;box-sizing:border-box`;
   const workHintStyle = `flex:none;font-size:${m ? 7 : 9}px;color:#8f97dd;letter-spacing:1px;text-align:center;line-height:1.7`;
   const workHint = touch ? 'TAP A FILE TO OPEN · SCROLL FOR MORE' : '↑ ↓ ← → TO MOVE · ENTER TO OPEN · ESC TO GO BACK';
 

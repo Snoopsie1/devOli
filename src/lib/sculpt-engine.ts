@@ -13,6 +13,12 @@ import * as THREE from 'three';
  * — 7.2 on desktop, 9.5 on mobile — so the full-bleed head keeps vertical margin
  * to stretch into and, on narrow phones, is small enough that the ears clear the
  * screen edges. Distance is a live prop (`setCameraZ`); the head never remounts.
+ *
+ * Further deliberate deviations (owner-requested, do NOT "restore" from the
+ * reference): `shape()` is rounder than the reference tear-drop — wider sides,
+ * softer jaw taper, no crown elongation; the ear cluster x offsets are pushed
+ * out to match the wider skull; and extra temple/behind-ear hair shells plus a
+ * taller sideburn close the bald gap between the cap and the ear.
  */
 
 const TAU = Math.PI * 2;
@@ -20,15 +26,15 @@ const TAU = Math.PI * 2;
 /* ---------- geometry helpers (verbatim) ---------- */
 
 // Shared "head space" squash so every part sits on the same skull.
+// Rounder than the reference: wider sides, gentler jaw taper, no crown stretch.
 function shape(x: number, y: number, z: number, inflate = 1): [number, number, number] {
-  x *= 0.86; z *= 0.92;
+  x *= 0.93; z *= 0.92;
   const t = Math.max(0, (-0.1 - y) / 1.0);
-  x *= 1 - 0.5 * t;
-  z *= 1 - 0.18 * t;
+  x *= 1 - 0.3 * t;
+  z *= 1 - 0.12 * t;
   if (y < -0.4 && z > 0) z += 0.06;
   if (z < -0.35) z *= 0.92;
   if (z > 0.55) z -= 0.1 * (z - 0.55);
-  if (y > 0.55) y += 0.04;
   return [x * inflate, y * inflate, z * inflate];
 }
 
@@ -94,11 +100,10 @@ function buildHead(skin: string): { group: THREE.Group; pickable: THREE.Mesh[] }
 
   const HAIR = 0x17110f, BROW = 0x1d1512, TASH = 0x241812;
 
-  // nose
-  const nose = part(new THREE.ConeGeometry(0.2, 0.46, 6), skin,
-    { r: [Math.PI / 2, 0, 0], s: [1, 1, 1], t: [0, -0.02, 0.86] });
+  // nose — ball only, no cone bridge (owner call)
+  const nose = part(new THREE.SphereGeometry(0.2, 8, 6), skin,
+    { s: [1, 0.9, 0.95], t: [0, -0.08, 0.86] });
   group.add(nose); pickable.push(nose);
-  group.add(part(new THREE.SphereGeometry(0.13, 7, 5), skin, { s: [1, 0.85, 0.9], t: [0, -0.1, 0.98] }));
 
   // eyes
   for (const sx of [-1, 1]) {
@@ -111,16 +116,16 @@ function buildHead(skin: string): { group: THREE.Group; pickable: THREE.Mesh[] }
     // thick brows
     group.add(part(new THREE.BoxGeometry(0.34, 0.1, 0.11), BROW,
       { r: [0, 0, sx * 0.17], t: [sx * 0.32, 0.36, 0.79] }));
-    // ears: outer helix, inner bowl, lobe
+    // ears: outer helix, inner bowl, lobe — pushed out to clear the wider skull
     group.add(part(new THREE.TorusGeometry(0.15, 0.055, 5, 9), skin,
-      { s: [1, 1.25, 0.85], r: [0, Math.PI / 2, sx * 0.12], t: [sx * 0.83, 0.0, 0.05] }));
+      { s: [1, 1.25, 0.85], r: [0, Math.PI / 2, sx * 0.12], t: [sx * 0.9, 0.0, 0.05] }));
     group.add(part(new THREE.SphereGeometry(0.13, 7, 5), 0xc98a63,
-      { s: [0.42, 1.1, 0.75], t: [sx * 0.8, -0.01, 0.05] }));
+      { s: [0.42, 1.1, 0.75], t: [sx * 0.87, -0.01, 0.05] }));
     group.add(part(new THREE.SphereGeometry(0.075, 6, 5), skin,
-      { s: [0.55, 1, 0.8], t: [sx * 0.82, -0.19, 0.04] }));
-    // sideburns
-    group.add(part(new THREE.BoxGeometry(0.09, 0.4, 0.3), HAIR,
-      { t: [sx * 0.72, 0.02, 0.18] }));
+      { s: [0.55, 1, 0.8], t: [sx * 0.89, -0.19, 0.04] }));
+    // sideburns — taller, reaching up to meet the temple hair
+    group.add(part(new THREE.BoxGeometry(0.11, 0.62, 0.34), HAIR,
+      { t: [sx * 0.79, 0.12, 0.16] }));
   }
 
   // moustache — handlebar
@@ -149,6 +154,21 @@ function buildHead(skin: string): { group: THREE.Group; pickable: THREE.Mesh[] }
   const bridge = applyShape(new THREE.SphereGeometry(1, 14, 10, Math.PI, Math.PI, Math.PI * 0.15, Math.PI * 0.45), 1.08);
   const bridgeMesh = part(bridge, HAIR, { t: [0, -0.08, -0.08] });
   group.add(bridgeMesh); pickable.push(bridgeMesh);
+
+  // hair: temple shells down each side, closing the bald gap between the cap
+  // edge and the ear / sideburn. phi 0 is -x, phi PI is +x.
+  for (const sx of [-1, 1]) {
+    const phiC = sx < 0 ? 0 : Math.PI;
+    const temple = applyShape(
+      new THREE.SphereGeometry(1, 10, 8, phiC - Math.PI * 0.26, Math.PI * 0.52, Math.PI * 0.2, Math.PI * 0.22),
+      1.06,
+    );
+    const templeMesh = part(temple, HAIR, { t: [0, -0.02, -0.06] });
+    group.add(templeMesh); pickable.push(templeMesh);
+    // filler behind the ear, tying the temple into the mullet
+    group.add(part(new THREE.SphereGeometry(0.24, 7, 5), HAIR,
+      { s: [0.5, 1.3, 1.0], t: [sx * 0.78, 0.02, -0.3] }));
+  }
 
   // hair: mullet mass at the back, overlapping the bridge
   const back = applyShape(new THREE.SphereGeometry(1, 14, 10), 1.02);
