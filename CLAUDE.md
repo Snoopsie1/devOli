@@ -36,12 +36,15 @@ no Tailwind — bespoke pixel styles. Fonts via `next/font/google` (Press Start
 - Border radius is always 0. Hard offset shadows only.
 - No data fetching — `PROJECTS` and `SKILLS` are static arrays. Handoff copy
   is placeholder until replaced with real projects.
-- No decorative images, icons, or SVG — glyphs and CSS only. The one exception
-  is real project screenshots: pre-resized WebP under `public/projects/<slug>/`,
-  declared as `Screenshot` entries on a `Project` and rendered by
-  `src/components/PixelGallery.tsx`. Deliberate deviation from the handoff's
-  no-assets stance, owner decision 2026-08. Plain `<img>` with intrinsic
-  `width`/`height`, not `next/image` — the files are already optimised.
+- No decorative images or SVG in the UI — glyphs and CSS only. Two exceptions,
+  both deliberate deviations from the handoff's no-assets stance (owner
+  decision, 2026-08):
+  - Real project screenshots: pre-resized WebP under `public/projects/<slug>/`,
+    declared as `Screenshot` entries on a `Project` and rendered by
+    `src/components/PixelGallery.tsx`. Plain `<img>` with intrinsic
+    `width`/`height`, not `next/image` — the files are already optimised.
+  - Brand icons: `src/app/{icon.png,apple-icon.png,favicon.ico}`, a render of
+    the head. These replaced a code-generated `icon.tsx`; don't reinstate it.
 - Inline styles are written as CSS declaration strings run through `css()` in
   `src/lib/css.ts`. Any new component matches that idiom, no CSS modules.
 
