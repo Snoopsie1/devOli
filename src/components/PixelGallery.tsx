@@ -94,21 +94,25 @@ export default function PixelGallery({ shots, mobile }: { shots: Screenshot[]; m
           aria-modal="true"
           aria-label={`${shot.caption} — screenshot ${(open ?? 0) + 1} of ${shots.length}`}
           onClick={(e) => { if (e.target === e.currentTarget) close(); }}
-          style={css(`position:fixed;inset:0;z-index:15;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:${mobile ? 12 : 16}px;padding:${mobile ? 16 : 28}px;background:rgba(5,5,14,.92);box-sizing:border-box`)}
+          style={css(`position:fixed;inset:0;z-index:15;display:flex;flex-direction:column;align-items:center;gap:${mobile ? 12 : 16}px;padding:${mobile ? 16 : 28}px;background:rgba(5,5,14,.92);box-sizing:border-box`)}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element -- see the thumbnail above */}
-          <img
-            src={shot.src}
-            alt={shot.alt}
-            width={shot.width}
-            height={shot.height}
-            style={{
-              maxWidth: '90vw', maxHeight: '70vh', width: 'auto', height: 'auto',
-              border: '3px solid #3b45b8', boxShadow: '0 0 0 3px #0a0b26, 0 24px 60px rgba(0,0,0,.6)',
-            }}
-          />
-          <span style={css(`font-family:${MONO};font-size:${mobile ? 11 : 12}px;color:#c2c9f5;text-align:center`)}>{shot.caption}</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* Scrolls rather than shrinks. These are modest source resolutions —
+              downscaling a tall shot to fit the viewport makes it unreadable. */}
+          <div style={css('flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;overflow:auto;-webkit-overflow-scrolling:touch')}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- see the thumbnail above */}
+            <img
+              src={shot.src}
+              alt={shot.alt}
+              width={shot.width}
+              height={shot.height}
+              style={{
+                maxWidth: '92vw', width: 'auto', height: 'auto', flex: 'none',
+                border: '3px solid #3b45b8', boxShadow: '0 0 0 3px #0a0b26, 0 24px 60px rgba(0,0,0,.6)',
+              }}
+            />
+          </div>
+          <span style={css(`flex:none;font-family:${MONO};font-size:${mobile ? 11 : 12}px;color:#c2c9f5;text-align:center`)}>{shot.caption}</span>
+          <div style={{ flex: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button type="button" onClick={() => step(-1)} aria-label="Previous screenshot" style={css(ctlStyle)}>◀</button>
             <span style={css(`font-size:9px;letter-spacing:1px;color:#8f97dd;min-width:52px;text-align:center`)}>
               {(open ?? 0) + 1} / {shots.length}

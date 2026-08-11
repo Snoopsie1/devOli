@@ -31,6 +31,10 @@ export interface Project {
   links?: [string, string][];
   // Optional. Omit and the detail panel renders exactly as it did before.
   screenshots?: Screenshot[];
+  // Optional square mark shown on the file-select card, e.g.
+  // '/projects/<slug>/icon.webp'. Decorative — the card already names the
+  // project — so it renders with an empty alt. Omit and the card is unchanged.
+  icon?: string;
 }
 
 export interface Site {
@@ -61,6 +65,7 @@ export const PROJECTS: Project[] = [
     body: 'A passwordless workout tracker. Sign in with a one-time email code, then log every set and watch your numbers climb over time. Built solo, end to end, from the auth flow and data model to the UI.',
     facts: [['ROLE', 'Solo, full-stack'], ['AUTH', 'Passwordless'], ['STATUS', 'Live']],
     links: [['LIVE', 'https://gymie.rasoli.dk']],
+    icon: '/projects/gymie/icon.webp',
     screenshots: [
       {
         src: '/projects/gymie/home-desktop.webp', width: 1600, height: 791, orientation: 'desktop',
@@ -96,6 +101,57 @@ export const PROJECTS: Project[] = [
     body: 'A single-page portfolio styled as an N64 title screen. The head is a real-time three.js mesh you can drag to deform and spring back with a wobble, about 400 lines of vertex-weighted soft-body math. Built with an agent-driven workflow.',
     facts: [['ROLE', 'Solo build'], ['PARTS', '44 meshes'], ['BUILD', 'Agent-driven']],
     links: [['LIVE', 'https://rasoli.dk'], ['CODE', 'https://github.com/Snoopsie1/devOli']],
+    icon: '/projects/dev64/icon.webp',
+  },
+  {
+    num: 'C', year: '2024', name: 'FRUGAL — SHOP SMARTER',
+    blurb: 'Where does this basket actually cost least?',
+    stack: 'FIGMA · UX RESEARCH', stars: 4,
+    body: 'Danish supermarkets all run different deals in the same week, so the cheapest basket is never the cheapest store. Frugal takes a shopping list and prices the whole basket at Netto, Lidl, Rema 1000 and the rest, so you can see what one trip costs everywhere, or what a run between stores would actually save. The list builds itself into a paper receipt as you type, and the same receipt becomes the answer. A team concept for school, taken to a clickable prototype.',
+    facts: [['ROLE', 'Team project'], ['SCOPE', 'Clickable prototype'], ['STATUS', 'Concept, not shipped']],
+    icon: '/projects/frugal/icon.webp',
+    screenshots: [
+      {
+        src: '/projects/frugal/logo.webp', width: 232, height: 186, orientation: 'desktop',
+        alt: 'The Frugal logo: a line-drawn basket of green grapes and a yellow pear with a leaf, above the lowercase wordmark "frugal".',
+        caption: 'THE MARK',
+      },
+      {
+        src: '/projects/frugal/empty-state.webp', width: 247, height: 547, orientation: 'mobile',
+        alt: 'Frugal opening screen: the logo above a single "Add to shopping list" field with a plus button, over a large faded basket watermark.',
+        caption: 'ONE FIELD, NOTHING ELSE',
+      },
+      {
+        src: '/projects/frugal/first-item.webp', width: 236, height: 530, orientation: 'mobile',
+        alt: 'Frugal after adding one item: a paper receipt has appeared below the input listing APPLE with a placeholder price, a prompt to find the best price, and a barcode.',
+        caption: 'THE LIST IS A RECEIPT',
+      },
+      {
+        src: '/projects/frugal/two-items.webp', width: 233, height: 526, orientation: 'mobile',
+        alt: 'The Frugal receipt with two items, BANANA and APPLE, each with a placeholder price.',
+        caption: 'ADDING ITEMS',
+      },
+      {
+        src: '/projects/frugal/full-list.webp', width: 229, height: 523, orientation: 'mobile',
+        alt: 'A fuller Frugal receipt listing hat, hat, glasses, cucumber, banana and apple, with the arrow prompt to price the basket.',
+        caption: 'READY TO PRICE',
+      },
+      {
+        src: '/projects/frugal/store-comparison.webp', width: 190, height: 914, orientation: 'mobile',
+        alt: 'Three stacked Frugal receipts comparing the same basket at Netto, Lidl and Rema 1000, each itemised with its own total.',
+        caption: 'THE SAME BASKET, EVERY STORE',
+      },
+      {
+        src: '/projects/frugal/cheapest-store.webp', width: 193, height: 426, orientation: 'mobile',
+        alt: 'The winning Netto receipt on its own, showing the cheapest total for the basket and an option to save the list.',
+        caption: 'THE CHEAPEST BASKET',
+      },
+      {
+        src: '/projects/frugal/shopping-checklist.webp', width: 198, height: 437, orientation: 'mobile',
+        alt: 'The Netto receipt used as an in-store checklist, with every item struck through as it is picked up.',
+        caption: 'TICK IT OFF IN THE AISLE',
+      },
+    ],
   },
 ];
 

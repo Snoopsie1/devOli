@@ -14,6 +14,8 @@ type Screen = 'boot' | 'work' | 'about' | 'contact';
 type View = Screen | 'detail';
 
 const EXIT_MS = 220; // exit animation length; must match `fadeout` below
+// Project mark on a file-select card. Desktop multiplies this by the 1.4× UI zoom.
+const ICON_PX = 34;
 
 /** SSR-safe media query hook (server + first client render report `false`). */
 function useMediaQuery(query: string): boolean {
@@ -338,9 +340,24 @@ export default function Stage() {
                     onFocus={() => setSel(i)}
                     style={css(cardStyle)}
                   >
-                    <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '9px', color: '#ffd23f', letterSpacing: '1px' }}>FILE {p.num}</span>
-                      <span style={{ fontSize: '9px', color: '#8f97dd' }}>{p.year}</span>
+                    <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                        {p.icon && (
+                          // Decorative: the card names the project right below.
+                          // eslint-disable-next-line @next/next/no-img-element -- pre-sized 128px WebP, no optimizer round-trip needed
+                          <img
+                            src={p.icon}
+                            alt=""
+                            width={128}
+                            height={128}
+                            loading="lazy"
+                            decoding="async"
+                            style={css(`display:block;flex:none;width:${ICON_PX}px;height:${ICON_PX}px;border:2px solid ${active ? '#ffd23f' : '#3b45b8'}`)}
+                          />
+                        )}
+                        <span style={{ fontSize: '9px', color: '#ffd23f', letterSpacing: '1px' }}>FILE {p.num}</span>
+                      </span>
+                      <span style={{ fontSize: '9px', color: '#8f97dd', flex: 'none' }}>{p.year}</span>
                     </span>
                     <span style={{ fontSize: '12px', lineHeight: 1.55, color: '#fff' }}>{p.name}</span>
                     <span style={{ fontFamily: MONO, fontSize: '12px', lineHeight: 1.55, color: '#a8b0ee' }}>{p.blurb}</span>
