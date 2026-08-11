@@ -8,7 +8,8 @@ File detail → Profile / Continue).
 
 Next.js (App Router, `src/` dir) · React · TypeScript · raw three.js (no R3F) ·
 no Tailwind — bespoke pixel styles. Fonts via `next/font/google` (Press Start
-2P + JetBrains Mono), no other assets.
+2P + JetBrains Mono). The only other assets are real project screenshots under
+`public/projects/<slug>/` (see Hard rules).
 
 ## Sources of truth
 
@@ -35,6 +36,14 @@ no Tailwind — bespoke pixel styles. Fonts via `next/font/google` (Press Start
 - Border radius is always 0. Hard offset shadows only.
 - No data fetching — `PROJECTS` and `SKILLS` are static arrays. Handoff copy
   is placeholder until replaced with real projects.
+- No decorative images, icons, or SVG — glyphs and CSS only. The one exception
+  is real project screenshots: pre-resized WebP under `public/projects/<slug>/`,
+  declared as `Screenshot` entries on a `Project` and rendered by
+  `src/components/PixelGallery.tsx`. Deliberate deviation from the handoff's
+  no-assets stance, owner decision 2026-08. Plain `<img>` with intrinsic
+  `width`/`height`, not `next/image` — the files are already optimised.
+- Inline styles are written as CSS declaration strings run through `css()` in
+  `src/lib/css.ts`. Any new component matches that idiom, no CSS modules.
 
 ## Workflow
 

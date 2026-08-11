@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import dynamic from 'next/dynamic';
 import { PROJECTS, SKILLS, SITE } from '@/data/content';
+import { css, MONO } from '@/lib/css';
+import PixelGallery from '@/components/PixelGallery';
 
 // Client-only: the head touches window + WebGL, and it must never SSR.
 const SculptFace = dynamic(() => import('@/components/SculptFace'), { ssr: false });
@@ -12,21 +14,6 @@ type Screen = 'boot' | 'work' | 'about' | 'contact';
 type View = Screen | 'detail';
 
 const EXIT_MS = 220; // exit animation length; must match `fadeout` below
-
-/** Parse a prototype-style CSS declaration string into a React style object. */
-function css(style: string): React.CSSProperties {
-  const obj: Record<string, string> = {};
-  for (const decl of style.split(';')) {
-    const idx = decl.indexOf(':');
-    if (idx === -1) continue;
-    const prop = decl.slice(0, idx).trim();
-    const val = decl.slice(idx + 1).trim();
-    if (!prop) continue;
-    const camel = prop.replace(/-([a-z])/g, (_, ch: string) => ch.toUpperCase());
-    obj[camel] = val;
-  }
-  return obj as React.CSSProperties;
-}
 
 /** SSR-safe media query hook (server + first client render report `false`). */
 function useMediaQuery(query: string): boolean {
@@ -42,8 +29,6 @@ function useMediaQuery(query: string): boolean {
   const getSnapshot = () => (typeof window !== 'undefined' ? window.matchMedia(query).matches : false);
   return useSyncExternalStore(subscribe, getSnapshot, () => false);
 }
-
-const MONO = 'var(--font-jetbrains-mono),monospace';
 
 export default function Stage() {
   const [screen, setScreen] = useState<Screen>('boot');
@@ -385,6 +370,9 @@ export default function Stage() {
               </div>
               <h2 id="detail-title" style={css(detailTitleStyle)}>{d.name}</h2>
               <span style={css(detailBodyStyle)}>{d.body}</span>
+              {d.screenshots && d.screenshots.length > 0 && (
+                <PixelGallery shots={d.screenshots} mobile={m} />
+              )}
               <div style={css(factsStyle)}>
                 {d.facts.map(([k, v]) => (
                   <div key={k} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

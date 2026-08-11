@@ -2,6 +2,21 @@
 // flagged for the owner to confirm (Gymie's year, skill percentages are
 // self-ratings). No data fetching — static arrays.
 
+/**
+ * One real screenshot of a project. Files live under `public/projects/<slug>/`
+ * as pre-resized WebP; `width`/`height` are the intrinsic pixel dimensions of
+ * the file on disk and must be accurate — the gallery reserves space with them
+ * so the detail panel does not jump while images load.
+ */
+export interface Screenshot {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  orientation: 'desktop' | 'mobile';
+  caption: string; // shown under the image in the lightbox, ALL-CAPS
+}
+
 export interface Project {
   num: string;
   year: string;
@@ -14,6 +29,8 @@ export interface Project {
   // Optional [label, href] pairs shown as buttons at the bottom of the detail
   // panel, e.g. ['LIVE', 'https://…'] / ['CODE', 'https://github.com/…'].
   links?: [string, string][];
+  // Optional. Omit and the detail panel renders exactly as it did before.
+  screenshots?: Screenshot[];
 }
 
 export interface Site {
@@ -44,6 +61,33 @@ export const PROJECTS: Project[] = [
     body: 'A passwordless workout tracker. Sign in with a one-time email code, then log every set and watch your numbers climb over time. Built solo, end to end, from the auth flow and data model to the UI.',
     facts: [['ROLE', 'Solo, full-stack'], ['AUTH', 'Passwordless'], ['STATUS', 'Live']],
     links: [['LIVE', 'https://gymie.rasoli.dk']],
+    screenshots: [
+      {
+        src: '/projects/gymie/home-desktop.webp', width: 1600, height: 791, orientation: 'desktop',
+        alt: 'Gymie home screen on desktop: a yellow mascot banner, a Start Training button, workout counters, and a list of recent sessions beside a left sidebar.',
+        caption: 'HOME · DESKTOP',
+      },
+      {
+        src: '/projects/gymie/home-mobile.webp', width: 396, height: 859, orientation: 'mobile',
+        alt: 'Gymie home screen on a phone: the same banner and counters stacked vertically above recent workouts, with a bottom tab bar.',
+        caption: 'HOME · MOBILE',
+      },
+      {
+        src: '/projects/gymie/start-workout-mobile.webp', width: 396, height: 861, orientation: 'mobile',
+        alt: 'Gymie workout setup on a phone, asking what you are training today with selectable muscle-group chips.',
+        caption: 'START A WORKOUT',
+      },
+      {
+        src: '/projects/gymie/exercise-pool-mobile.webp', width: 397, height: 865, orientation: 'mobile',
+        alt: 'Gymie live workout on a phone: a Lat Pulldown card with logged sets and weight and rep steppers, above a pool of suggested exercises.',
+        caption: 'LOGGING SETS',
+      },
+      {
+        src: '/projects/gymie/history-mobile.webp', width: 393, height: 864, orientation: 'mobile',
+        alt: 'Gymie history on a phone, grouping past workouts by week with muscle-group tags and set and volume totals.',
+        caption: 'HISTORY',
+      },
+    ],
   },
   {
     num: 'B', year: '2026', name: 'DEV 64 — THIS PORTFOLIO',
