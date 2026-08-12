@@ -45,6 +45,10 @@ no Tailwind — bespoke pixel styles. Fonts via `next/font/google` (Press Start
     `width`/`height`, not `next/image` — the files are already optimised.
   - Brand icons: `src/app/{icon.png,apple-icon.png,favicon.ico}`, a render of
     the head. These replaced a code-generated `icon.tsx`; don't reinstate it.
+    `public/og/head.png` is the same render, embedded as base64 by
+    `opengraph-image.tsx` at build.
+  - Per-project marks: optional `icon` on a `Project`, cropped from that
+    project's own artwork, shown on its file-select card.
 - Inline styles are written as CSS declaration strings run through `css()` in
   `src/lib/css.ts`. Any new component matches that idiom, no CSS modules.
 
