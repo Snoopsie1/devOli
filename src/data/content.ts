@@ -35,6 +35,10 @@ export interface Project {
   // '/projects/<slug>/icon.webp'. Decorative — the card already names the
   // project — so it renders with an empty alt. Omit and the card is unchanged.
   icon?: string;
+  // Appends a `SECRETS  0 / 1` line to this project's facts, flipping to
+  // `1 / 1` once the Konami code has been entered. The only hint that the
+  // secret exists, so exactly one project should carry it.
+  secretCounter?: boolean;
 }
 
 export interface Site {
@@ -102,6 +106,7 @@ export const PROJECTS: Project[] = [
     facts: [['ROLE', 'Solo build'], ['PARTS', '44 meshes'], ['BUILD', 'Agent-driven']],
     links: [['LIVE', 'https://rasoli.dk'], ['CODE', 'https://github.com/Snoopsie1/devOli']],
     icon: '/projects/dev64/icon.webp',
+    secretCounter: true,
   },
   {
     num: 'C', year: '2024', name: 'FRUGAL — SHOP SMARTER',
@@ -161,3 +166,46 @@ export const SKILLS: [string, number][] = [
   ['TYPESCRIPT', 0.92], ['REACT / NEXT', 0.9], ['AGENTIC DEV', 0.95],
   ['NODE / .NET', 0.82], ['SQL / DATA', 0.76],
 ];
+
+/* ---------------------------------------------------------------------------
+   Konami secret mode.
+
+   Everything below is client-only: it is never rendered on the server and is
+   deliberately kept OUT of `PROJECTS` and `SITE`, because `src/app/page.tsx`
+   renders those into the crawlable SSR summary. Nothing here should reach a
+   search engine — the whole point is that you have to find it.
+
+   ⚠️ OWNER: the copy below is placeholder. Replace the achievements with real
+   ones before this ships.
+--------------------------------------------------------------------------- */
+
+/** Identity overrides applied while secret mode is on. Client-side only. */
+export const SECRET_SITE: Pick<Site, 'name' | 'subtitle' | 'bio'> = {
+  name: 'SNOOPSIE',
+  subtitle: 'PLAYER 1 · SINCE THE CARTRIDGE ERA',
+  bio: 'Off the clock I go by Snoopsie. Same person, fewer standups. Most of what I know about systems I learned from games that never explained themselves, and most of what I know about probability I paid for in booster packs. Poke the head, it still works.',
+};
+
+/** Player Profile bars while secret mode is on. Labels max ~12 characters —
+ *  the label column is a fixed 120px and anything longer wraps to two lines. */
+export const SECRET_SKILLS: [string, number][] = [
+  ['DECKBUILDING', 0.88], ['GAME SENSE', 0.85], ['CLUTCH', 0.62],
+  ['TOUCH GRASS', 0.31], ['BACKLOG', 0.12],
+];
+
+/**
+ * The fourth file card, revealed only in secret mode. `num` is '?' rather than
+ * a letter so it reads as a hidden slot next to FILE A / B / C.
+ */
+export const SECRET_PROJECT: Project = {
+  num: '?', year: '20XX', name: 'SNOOPSIE — THE OTHER SAVE FILE',
+  blurb: 'What the working hours do not cover.',
+  stack: 'TCG · FPS · TOO MANY HOURS', stars: 6,
+  body: 'The unlisted save. Twenty-odd years of games, a card collection that outlived several formats, and the specific kind of stubbornness that makes someone rebuild a deck at 2am because one card felt wrong. None of it is on the CV, all of it explains how I debug.',
+  facts: [
+    ['MAIN', 'Placeholder — owner to fill'],
+    ['TCG', 'Placeholder — owner to fill'],
+    ['PEAK RANK', 'Placeholder — owner to fill'],
+    ['HOURS', 'Do not ask'],
+  ],
+};

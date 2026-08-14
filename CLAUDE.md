@@ -51,6 +51,14 @@ no Tailwind — bespoke pixel styles. Fonts via `next/font/google` (Press Start
     project's own artwork, shown on its file-select card.
 - Inline styles are written as CSS declaration strings run through `css()` in
   `src/lib/css.ts`. Any new component matches that idiom, no CSS modules.
+- Colours are CSS custom properties defined in `src/app/globals.css`, never hex
+  literals in components. The Konami secret mode repaints the whole site by
+  flipping `data-secret="1"` on `<html>`, so a hardcoded colour silently opts
+  out of that. Exceptions: `rgba(0,0,0,…)` scanlines/vignette, the three.js
+  head materials (WebGL can't read custom properties), and build-time images.
+- The Konami secret mode (`src/components/Stage.tsx`) is client-only and
+  session-scoped. `SECRET_*` content in `src/data/content.ts` must stay OUT of
+  `PROJECTS`/`SITE` — those feed the crawlable SSR summary in `src/app/page.tsx`.
 
 ## Workflow
 

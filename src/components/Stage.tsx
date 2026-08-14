@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import dynamic from 'next/dynamic';
-import { PROJECTS, SKILLS, SITE } from '@/data/content';
+import { PROJECTS, SECRET_PROJECT, SECRET_SITE, SECRET_SKILLS, SKILLS, SITE } from '@/data/content';
 import { css, MONO } from '@/lib/css';
+import { blip } from '@/lib/blip';
 import PixelGallery from '@/components/PixelGallery';
 
 // Client-only: the head touches window + WebGL, and it must never SSR.
@@ -16,6 +17,24 @@ type View = Screen | 'detail';
 const EXIT_MS = 220; // exit animation length; must match `fadeout` below
 // Project mark on a file-select card. Desktop multiplies this by the 1.4× UI zoom.
 const ICON_PX = 34;
+
+/* --- Konami secret mode ---------------------------------------------------
+   Up up down down left right left right B A flips the site into a Game Boy
+   DMG palette, swaps the head for the owner's avatar, renames him to Snoopsie
+   and reveals a fourth file. The hint is the `SECRETS 0 / 1` stat on the
+   DEV 64 file. Entering the code again turns it back off.
+
+   Deliberately client-only and session-scoped: it never touches metadata,
+   JSON-LD, the sitemap or the SSR summary in `src/app/page.tsx`. */
+const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+const SECRET_KEY = 'dev64:secret';
+// Touch has no arrow keys, and the head canvas already owns every tap and drag
+// (sculpt / orbit / double-tap reset), so the gesture lives on the brand name.
+const HOLD_MS = 800;
+// DMG tones for the avatar head. three.js materials can't read CSS custom
+// properties, so the secret palette is duplicated here for the one mesh that
+// needs it. Module-level so the reference stays stable across renders.
+const AVATAR_DMG = { skin: '#8bac0f', ink: '#0f380f' };
 
 /** SSR-safe media query hook (server + first client render report `false`). */
 function useMediaQuery(query: string): boolean {
@@ -39,6 +58,9 @@ export default function Stage() {
   const [detail, setDetail] = useState<number | null>(null);
   // The single view that is currently animating OUT, kept mounted for EXIT_MS.
   const [leaving, setLeaving] = useState<{ view: View; detailIdx: number | null } | null>(null);
+  // Starts false on the server AND on the first client render — restored from
+  // sessionStorage in an effect below, so hydration always matches.
+  const [secret, setSecret] = useState(false);
 
   // Focus management for the detail dialog.
   const closeBtnRef = useRef<HTMLButtonElement>(null);
@@ -51,6 +73,95 @@ export default function Stage() {
   // that the ears clear the narrow screen edges. Depends only on `m`, so it never
   // changes while navigating screens (no per-screen glide pump).
   const cameraZ = m ? 9.5 : 7.2;
+
+  /* --- secret mode ------------------------------------------------------ */
+
+  const secretRef = useRef(false);
+  useEffect(() => { secretRef.current = secret; }, [secret]);
+
+  // Toggled only from real user gestures (the code, or a long-press), so the
+  // blip is always inside a user activation and autoplay policy is happy.
+  const toggleSecret = useCallback(() => {
+    const next = !secretRef.current;
+    secretRef.current = next;
+    blip(next);
+    setSecret(next);
+    if (next) return;
+    // Turning it off shrinks the file list by one. Never leave the selection,
+    // an open detail, or an exiting detail pointing at the vanished index.
+    setSel((s) => Math.min(s, PROJECTS.length - 1));
+    setDetail((cur) => (cur !== null && cur >= PROJECTS.length ? null : cur));
+    setLeaving((l) => (l && l.detailIdx !== null && l.detailIdx >= PROJECTS.length ? null : l));
+  }, []);
+
+  // Restore first — this runs before the persisting effect below reads `secret`.
+  const hydrated = useRef(false);
+  useEffect(() => {
+    try {
+      // setState in an effect is exactly right here: the server and the first
+      // client render must both be non-secret or hydration mismatches, so the
+      // stored value can only be applied after mount.
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration safety, see above
+      if (sessionStorage.getItem(SECRET_KEY) === '1') setSecret(true);
+    } catch { /* private mode / storage disabled — secret just doesn't persist */ }
+    hydrated.current = true;
+  }, []);
+
+  // The whole palette flip is this one attribute. It goes on <html> rather than
+  // the stage root so `globals.css` (links, focus ring, body background) and the
+  // gallery lightbox — which portals to document.body — flip along with it.
+  useEffect(() => {
+    const el = document.documentElement;
+    if (secret) el.dataset.secret = '1';
+    else delete el.dataset.secret;
+    if (!hydrated.current) return;
+    try {
+      sessionStorage.setItem(SECRET_KEY, secret ? '1' : '0');
+    } catch { /* see above */ }
+  }, [secret]);
+
+  // The code itself. Kept in its own listener, separate from the navigation
+  // handler below, so its dependency array can stay empty and the ring buffer
+  // survives every re-render. No preventDefault: the arrows keep driving
+  // file-select while the code is typed, which is harmless and keeps the site
+  // usable for anyone pressing arrows without secret intent.
+  useEffect(() => {
+    const buf: string[] = [];
+    const onKey = (e: KeyboardEvent) => {
+      buf.push(e.key.length === 1 ? e.key.toLowerCase() : e.key);
+      if (buf.length > KONAMI.length) buf.shift();
+      if (buf.length === KONAMI.length && KONAMI.every((k, i) => k === buf[i])) {
+        buf.length = 0;
+        toggleSecret();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [toggleSecret]);
+
+  // Touch path: hold the brand name. `held` suppresses the click that would
+  // otherwise fire straight after and navigate back to the title screen.
+  const holdTimer = useRef<number | null>(null);
+  const held = useRef(false);
+  const cancelHold = useCallback(() => {
+    if (holdTimer.current !== null) {
+      clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+    }
+  }, []);
+  const startHold = useCallback(() => {
+    held.current = false;
+    cancelHold();
+    holdTimer.current = window.setTimeout(() => {
+      held.current = true;
+      holdTimer.current = null;
+      toggleSecret();
+    }, HOLD_MS);
+  }, [cancelHold, toggleSecret]);
+  useEffect(() => cancelHold, [cancelHold]);
+
+  const projects = secret ? [...PROJECTS, SECRET_PROJECT] : PROJECTS;
+  const fileCount = projects.length;
 
   const currentView: View = detail !== null ? 'detail' : screen;
 
@@ -117,12 +228,12 @@ export default function Stage() {
         return;
       }
       if (screen !== 'work' || detail !== null) return;
-      const cols = m ? 1 : Math.min(PROJECTS.length, 3);
+      const cols = m ? 1 : Math.min(fileCount, 3);
       const map: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: cols, ArrowUp: -cols };
       const d = map[e.key];
       if (d) {
         e.preventDefault();
-        const next = (sel + d + PROJECTS.length) % PROJECTS.length;
+        const next = (sel + d + fileCount) % fileCount;
         setSel(next);
         // Roving tabindex: keep DOM focus on the selected card when arrowing.
         if ((e.target as HTMLElement).closest?.('[data-file-card]')) {
@@ -132,7 +243,7 @@ export default function Stage() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [screen, sel, detail, m, go, openDetail, closeDetail]);
+  }, [screen, sel, detail, m, fileCount, go, openDetail, closeDetail]);
 
   // Is a given view entering, leaving, or absent this render?
   const modeOf = (v: View): 'in' | 'out' | null =>
@@ -150,13 +261,13 @@ export default function Stage() {
 
   // Detail content survives its own exit: fall back to the leaving index.
   const dIdx = detail ?? leaving?.detailIdx ?? null;
-  const d = dIdx === null ? null : PROJECTS[dIdx];
+  const d = dIdx === null ? null : projects[dIdx];
 
   const bottomSafe = m ? 68 : 0; // room for the phone nav bar
   const sectionTitle = `flex:none;font-size:${m ? 11 : 13}px;font-weight:400;letter-spacing:3px;color:var(--acc);text-shadow:0 3px 0 var(--acc-sh);text-align:center`;
 
   // background watermark: fewer, smaller marks on phone
-  const words = ['OLIVER', 'RASOLI'];
+  const words = secret ? ['SNOOPSIE', 'PLAYER 1'] : ['OLIVER', 'RASOLI'];
   const count = m ? 12 : 16;
   const marks = Array.from({ length: count }, (_, i) => words[(i + Math.floor(i / (m ? 3 : 4))) % 2]);
 
@@ -197,7 +308,10 @@ export default function Stage() {
   };
 
   const watermarkStyle = `position:absolute;inset:0;z-index:1;display:grid;grid-template-columns:repeat(${m ? 3 : 4},1fr);grid-auto-rows:${m ? 18 : 22}vh;place-items:center;animation:swell 6s ease-in-out infinite;pointer-events:none`;
-  const markStyle = `font-size:${m ? 18 : 30}px;color:var(--wm);text-shadow:0 3px 0 var(--wm-sh)`;
+  // The secret words are 8 characters against the usual 6, which overflows the
+  // fixed 3/4-column grid and clips them at the viewport edge. Scale to fit.
+  const markPx = secret ? (m ? 13 : 23) : (m ? 18 : 30);
+  const markStyle = `font-size:${markPx}px;color:var(--wm);text-shadow:0 3px 0 var(--wm-sh)`;
 
   const brandStyle = m
     ? 'position:absolute;top:20px;left:0;right:0;z-index:8;display:flex;flex-direction:column;align-items:center;gap:9px;padding:0 16px;text-align:center'
@@ -217,7 +331,7 @@ export default function Stage() {
   const bootHint = touch ? 'DRAG MY FACE · DOUBLE-TAP RESETS' : 'DRAG MY FACE · DOUBLE-CLICK RESETS · ENTER TO BEGIN';
 
   const workStyle = `position:absolute;left:0;right:0;top:${m ? 96 : 106}px;bottom:${m ? bottomSafe + 8 : 56}px;z-index:8;display:flex;flex-direction:column;align-items:center;gap:${m ? 12 : 18}px;padding:0 ${m ? 16 : 44}px;box-sizing:border-box`;
-  const gridStyle = `flex:1;min-height:0;width:100%;max-width:1000px;overflow:auto;-webkit-overflow-scrolling:touch;display:grid;grid-template-columns:repeat(${m ? 1 : Math.min(PROJECTS.length, 3)},minmax(0,1fr));grid-auto-rows:min-content;gap:${m ? 12 : 16}px;padding:2px 4px 8px;box-sizing:border-box`;
+  const gridStyle = `flex:1;min-height:0;width:100%;max-width:1000px;overflow:auto;-webkit-overflow-scrolling:touch;display:grid;grid-template-columns:repeat(${m ? 1 : Math.min(fileCount, 3)},minmax(0,1fr));grid-auto-rows:min-content;gap:${m ? 12 : 16}px;padding:2px 4px 8px;box-sizing:border-box`;
   const workHintStyle = `flex:none;font-size:${m ? 7 : 9}px;color:var(--tx-dim);letter-spacing:1px;text-align:center;line-height:1.7`;
   const workHint = touch ? 'TAP A FILE TO OPEN · SCROLL FOR MORE' : '↑ ↓ ← → TO MOVE · ENTER TO OPEN · ESC TO GO BACK';
 
@@ -268,7 +382,9 @@ export default function Stage() {
         brush={0.52}
         pixel={0.3}
         cameraZ={cameraZ}
-        ariaLabel="Sculptable low-poly 3D head"
+        variant={secret ? 'avatar' : 'face'}
+        variantColors={AVATAR_DMG}
+        ariaLabel={secret ? 'Sculptable low-poly 3D avatar head' : 'Sculptable low-poly 3D head'}
         style={css(faceByScreen[screen])}
       />
 
@@ -279,9 +395,26 @@ export default function Stage() {
         {/* Not an <h1>: the page's single h1 lives in the server-rendered
             summary in `src/app/page.tsx`. Styling is unchanged. */}
         <div style={css(brandNameStyle)}>
-          <button type="button" onClick={() => go('boot')} style={{ cursor: 'pointer' }}>{SITE.name}</button>
+          {/* Also the touch trigger for the secret: hold it for HOLD_MS. The
+              pointer handlers cannot live on the head — that canvas already
+              owns tap, drag and double-tap. */}
+          <button
+            type="button"
+            onClick={() => {
+              if (held.current) { held.current = false; return; } // consume the long-press
+              go('boot');
+            }}
+            onPointerDown={startHold}
+            onPointerUp={cancelHold}
+            onPointerLeave={cancelHold}
+            onPointerCancel={cancelHold}
+            onContextMenu={(e) => e.preventDefault()}
+            style={{ cursor: 'pointer' }}
+          >
+            {secret ? SECRET_SITE.name : SITE.name}
+          </button>
         </div>
-        <span style={css(brandSubStyle)}>{SITE.subtitle}</span>
+        <span style={css(brandSubStyle)}>{secret ? SECRET_SITE.subtitle : SITE.subtitle}</span>
       </div>
 
       {/* nav */}
@@ -328,7 +461,7 @@ export default function Stage() {
           <div style={css(`${workStyle};${animCss(workMode)};pointer-events:auto`)} inert={workMode === 'out' ? true : undefined}>
             <h2 style={css(sectionTitle)}>SELECT A FILE</h2>
             <div style={css(gridStyle)}>
-              {PROJECTS.map((p, i) => {
+              {projects.map((p, i) => {
                 const active = i === sel;
                 const cardStyle = `width:100%;text-align:left;display:flex;flex-direction:column;gap:9px;padding:${m ? '16px 16px' : '15px 17px'};cursor:pointer;background:${active ? 'var(--card-active)' : 'var(--card)'};border:3px solid ${active ? 'var(--acc)' : 'var(--bd)'};box-shadow:0 6px 0 ${active ? 'var(--acc-sh2)' : 'var(--card-sh)'};transform:translateY(${active ? '-4px' : '0'});transition:transform .12s`;
                 return (
@@ -393,7 +526,9 @@ export default function Stage() {
                 <PixelGallery shots={d.screenshots} mobile={m} />
               )}
               <div style={css(factsStyle)}>
-                {d.facts.map(([k, v]) => (
+                {/* The only hint that the secret exists. It reads as one more
+                    stat in the grid until you notice it never says 1 / 1. */}
+                {(d.secretCounter ? [...d.facts, ['SECRETS', secret ? '1 / 1' : '0 / 1'] as [string, string]] : d.facts).map(([k, v]) => (
                   <div key={k} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <span style={{ fontSize: '8px', letterSpacing: '2px', color: 'var(--tx-dimmer)' }}>{k}</span>
                     <span style={{ fontFamily: MONO, fontSize: '14px', color: 'var(--tx-strong)' }}>{v}</span>
@@ -415,9 +550,9 @@ export default function Stage() {
         {aboutMode && (
           <div style={css(`${aboutStyle};${animCss(aboutMode)};pointer-events:auto`)} inert={aboutMode === 'out' ? true : undefined}>
             <h2 style={css(sectionTitle)}>PLAYER PROFILE</h2>
-            <span style={css(aboutBodyStyle)}>{SITE.bio}</span>
+            <span style={css(aboutBodyStyle)}>{secret ? SECRET_SITE.bio : SITE.bio}</span>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {SKILLS.map(([k, v]) => (
+              {(secret ? SECRET_SKILLS : SKILLS).map(([k, v]) => (
                 <div key={k} style={css(`display:flex;align-items:center;gap:${m ? 10 : 14}px`)}>
                   <span style={css(`width:${m ? 88 : 120}px;flex:none;font-size:${m ? 7 : 9}px;letter-spacing:1px;color:var(--tx-nav)`)}>{k}</span>
                   <div style={{ flex: 1, height: '14px', background: 'var(--track)', border: '2px solid var(--bd)' }}>

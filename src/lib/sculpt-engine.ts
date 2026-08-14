@@ -71,7 +71,7 @@ function part(geo: THREE.BufferGeometry, color: THREE.ColorRepresentation, opts?
 
 /* ---------- the head (verbatim) ---------- */
 
-function buildHead(skin: string): { group: THREE.Group; pickable: THREE.Mesh[] } {
+function buildFaceHead(skin: string): { group: THREE.Group; pickable: THREE.Mesh[] } {
   const group = new THREE.Group();
   const pickable: THREE.Mesh[] = [];
 
@@ -205,7 +205,57 @@ function buildHead(skin: string): { group: THREE.Group; pickable: THREE.Mesh[] }
   return { group, pickable };
 }
 
+/* ---------- the avatar head (Konami secret) ---------- */
+
+/**
+ * Ported verbatim from `docs/design_handoff_avatar_head/reference/sculpt-avatar.js`
+ * (`buildHead`, lines 47-71): the owner's Discord avatar as a round low-poly
+ * skull with two dot eyes and an L-shaped nose. Four meshes, only the skull is
+ * pickable.
+ *
+ * Same engine as the face — identical sculpt brush, spring reset, lights and
+ * camera — so nothing outside `buildHead` was ported. The avatar reference's own
+ * `shape()` is deliberately absent: its `buildHead` never calls `applyShape`, it
+ * bakes a plain squashed sphere, so the site's owner-tuned `shape()` is untouched.
+ *
+ * Deviation: `skin`/`ink` are parameters rather than the handoff's fixed
+ * `#d6d6d6` / `0x22252b`, because this head only ever appears in the Game Boy
+ * secret mode and has to sit in that palette.
+ */
+function buildAvatarHead(skin: string, ink: string): { group: THREE.Group; pickable: THREE.Mesh[] } {
+  const group = new THREE.Group();
+  const pickable: THREE.Mesh[] = [];
+
+  // round, faintly squashed skull
+  const hg = bake(new THREE.SphereGeometry(1, 20, 16), { s: [1, 1, 0.9] }).toNonIndexed();
+  hg.computeVertexNormals();
+  const head = new THREE.Mesh(hg, new THREE.MeshLambertMaterial({ color: skin, flatShading: true }));
+  group.add(head); pickable.push(head);
+
+  // two small dot eyes, sitting just proud of the surface
+  for (const sx of [-1, 1]) {
+    group.add(part(new THREE.SphereGeometry(0.105, 9, 7), ink,
+      { s: [1, 1, 0.5], t: [sx * 0.4, 0.04, 0.83] }));
+  }
+
+  // nose: an L — short foot bottom-left, long limb kicking up 45° to the right
+  group.add(part(new THREE.CapsuleGeometry(0.045, 0.1, 3, 8), ink,
+    { s: [1, 1, 0.5], r: [0, 0, Math.PI / 2], t: [-0.07, -0.09, 0.9] }));
+  group.add(part(new THREE.CapsuleGeometry(0.045, 0.24, 3, 8), ink,
+    { s: [1, 1, 0.5], r: [0, 0, Math.PI / 4], t: [-0.06, 0.01, 0.9] }));
+
+  return { group, pickable };
+}
+
+/** The bare skull reads much smaller than the face's hair silhouette at the
+ *  same camera distance, so it is scaled up to fill a comparable box rather
+ *  than moving the (screen-layout-coupled) camera. */
+const VARIANT_SCALE: Record<HeadVariant, number> = { face: 1, avatar: 1.1 };
+
 /* ---------- factory ---------- */
+
+/** Which head is on screen. `avatar` is the Konami secret mode's Discord head. */
+export type HeadVariant = 'face' | 'avatar';
 
 export interface SculptFaceOptions {
   skin?: string;
@@ -219,6 +269,17 @@ export interface SculptFaceHandle {
   dispose(): void;
   /** Move the camera in/out live (head stays mounted, sculpt state persists). */
   setCameraZ(z: number): void;
+  /**
+   * Swap which head is rendered, in place. The renderer, scene, camera and
+   * lights are untouched and the component never remounts, so this does not
+   * break the never-unmount rule.
+   *
+   * Sculpt deformation DOES reset across a swap, by design: `rest`/`base` are
+   * per-geometry vertex buffers and the two heads share no vertex count or
+   * layout, so there is nothing to carry over. Orientation (`spin`) is kept so
+   * the new head arrives facing the way the old one did.
+   */
+  setHead(variant: HeadVariant, colors?: { skin?: string; ink?: string }): void;
 }
 
 interface Part {
@@ -266,21 +327,37 @@ export function createSculptFace(host: HTMLElement, options: SculptFaceOptions =
   rim.position.set(-1.6, 0.3, -1.4);
   scene.add(rim);
 
-  const { group: headGroup, pickable } = buildHead(skin);
-  scene.add(headGroup);
-
+  // Mutable: `setHead` swaps all three in place. Everything downstream reads
+  // them through these bindings, never through a captured copy.
+  let variant: HeadVariant = 'face';
+  let headGroup: THREE.Group;
+  let pickable: THREE.Mesh[] = [];
   const parts: Part[] = [];
-  headGroup.traverse((o) => {
-    const mesh = o as THREE.Mesh;
-    if (!mesh.isMesh) return;
-    const p = mesh.geometry.attributes.position as THREE.BufferAttribute;
-    parts.push({
-      mesh,
-      pos: p,
-      rest: Float32Array.from(p.array as ArrayLike<number>),
-      base: new Float32Array(p.array.length),
+
+  /** Snapshot every mesh's rest positions — the basis all sculpt math works in. */
+  function capture(group: THREE.Group): void {
+    parts.length = 0;
+    group.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      const p = mesh.geometry.attributes.position as THREE.BufferAttribute;
+      parts.push({
+        mesh,
+        pos: p,
+        rest: Float32Array.from(p.array as ArrayLike<number>),
+        base: new Float32Array(p.array.length),
+      });
     });
-  });
+  }
+
+  {
+    const built = buildFaceHead(skin);
+    headGroup = built.group;
+    pickable = built.pickable;
+    headGroup.scale.setScalar(VARIANT_SCALE.face);
+    scene.add(headGroup);
+    capture(headGroup);
+  }
 
   const raycaster = new THREE.Raycaster();
   const plane = new THREE.Plane();
@@ -478,6 +555,42 @@ export function createSculptFace(host: HTMLElement, options: SculptFaceOptions =
     camera.updateMatrixWorld();
   }
 
+  /** Free a head group's GPU resources. Without this every toggle leaks. */
+  function disposeGroup(group: THREE.Group): void {
+    group.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      mesh.geometry.dispose();
+      const mat = mesh.material;
+      if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
+      else mat.dispose();
+    });
+  }
+
+  function setHead(next: HeadVariant, colors?: { skin?: string; ink?: string }): void {
+    if (next === variant) return;
+
+    // Abandon any in-flight interaction: `grab.local` is a point in the old
+    // head's space and the spring is mid-flight against buffers about to die.
+    grab = null;
+    orbit = null;
+    resetT = 0;
+    canvas.style.cursor = 'grab';
+
+    scene.remove(headGroup);
+    disposeGroup(headGroup);
+
+    const built = next === 'avatar'
+      ? buildAvatarHead(colors?.skin ?? '#d6d6d6', colors?.ink ?? '#22252b')
+      : buildFaceHead(skin);
+    headGroup = built.group;
+    pickable = built.pickable;
+    headGroup.scale.setScalar(VARIANT_SCALE[next]);
+    scene.add(headGroup);
+    capture(headGroup); // sculpt state resets here — see setHead's doc comment
+    variant = next;
+  }
+
   function dispose(): void {
     renderer.setAnimationLoop(null);
     ro.disconnect();
@@ -498,5 +611,5 @@ export function createSculptFace(host: HTMLElement, options: SculptFaceOptions =
     if (canvas.parentNode === host) host.removeChild(canvas);
   }
 
-  return { dispose, setCameraZ };
+  return { dispose, setCameraZ, setHead };
 }
