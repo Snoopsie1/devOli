@@ -184,6 +184,29 @@ a:focus-visible {
   to { opacity: 0; transform: translateY(14px); }
 }
 
+/* Konami mode change: a hard signal-loss stutter over the whole stage while the
+   palette flips and the head is rebuilt underneath. `steps(1,end)` per segment
+   keeps it snapping between states rather than easing, which is what sells it
+   as broken hardware and not as a transition. The translate lets the body
+   background show at the edges — that gap is the point.
+
+   Cheap by construction: one compositor-level transform + filter on a single
+   element, no per-frame JS and no extra layers. */
+@keyframes glitch {
+  0%   { transform: none;                  filter: none; }
+  9%   { transform: translate(-7px, 2px);  filter: invert(1) hue-rotate(90deg); }
+  18%  { transform: translate(6px, -3px);  filter: saturate(7) contrast(2.2); }
+  27%  { transform: translate(-4px, -1px); filter: invert(1); }
+  36%  { transform: translate(5px, 3px);   filter: brightness(2.6); }
+  45%  { transform: translate(-6px, 1px);  filter: invert(1) saturate(5); }
+  54%  { transform: translate(3px, -2px);  filter: contrast(3.4); }
+  63%  { transform: translate(-2px, 2px);  filter: invert(1) brightness(1.8); }
+  72%  { transform: translate(4px, 0);     filter: saturate(4); }
+  81%  { transform: translate(-1px, -1px); filter: brightness(1.4); }
+  90%  { transform: translate(1px, 1px);   filter: contrast(1.6); }
+  100% { transform: none;                  filter: none; }
+}
+
 /* Respect users who ask for less motion: no screen or head animation. */
 @media (prefers-reduced-motion: reduce) {
   * {

@@ -31,10 +31,13 @@ const SECRET_KEY = 'dev64:secret';
 // Touch has no arrow keys, and the head canvas already owns every tap and drag
 // (sculpt / orbit / double-tap reset), so the gesture lives on the brand name.
 const HOLD_MS = 800;
-// DMG tones for the avatar head. three.js materials can't read CSS custom
-// properties, so the secret palette is duplicated here for the one mesh that
-// needs it. Module-level so the reference stays stable across renders.
-const AVATAR_DMG = { skin: '#8bac0f', ink: '#0f380f' };
+// The avatar keeps its real grey rather than joining the DMG ramp — it reads as
+// the actual Discord avatar dropped into a Game Boy, which is the joke. Values
+// are the handoff defaults. Module-level so the reference is stable across
+// renders (SculptFace compares it by identity).
+const AVATAR_COLORS = { skin: '#d6d6d6', ink: '#22252b' };
+// How long the glitch covers a mode change. Must match `glitch` in globals.css.
+const GLITCH_MS = 380;
 
 /** SSR-safe media query hook (server + first client render report `false`). */
 function useMediaQuery(query: string): boolean {
@@ -79,6 +82,13 @@ export default function Stage() {
   const secretRef = useRef(false);
   useEffect(() => { secretRef.current = secret; }, [secret]);
 
+  // Signal-loss stutter over the whole stage while the palette flips and the
+  // head is rebuilt, so the swap reads as one deliberate event rather than
+  // three things changing at slightly different times.
+  const [glitching, setGlitching] = useState(false);
+  const glitchTimer = useRef<number | null>(null);
+  useEffect(() => () => { if (glitchTimer.current !== null) clearTimeout(glitchTimer.current); }, []);
+
   // Toggled only from real user gestures (the code, or a long-press), so the
   // blip is always inside a user activation and autoplay policy is happy.
   const toggleSecret = useCallback(() => {
@@ -86,6 +96,14 @@ export default function Stage() {
     secretRef.current = next;
     blip(next);
     setSecret(next);
+
+    if (glitchTimer.current !== null) clearTimeout(glitchTimer.current);
+    setGlitching(true);
+    glitchTimer.current = window.setTimeout(() => {
+      setGlitching(false);
+      glitchTimer.current = null;
+    }, GLITCH_MS);
+
     if (next) return;
     // Turning it off shrinks the file list by one. Never leave the selection,
     // an open detail, or an exiting detail pointing at the vanished index.
@@ -305,6 +323,9 @@ export default function Stage() {
     color: 'var(--tx)',
     userSelect: 'none',
     WebkitTapHighlightColor: 'transparent',
+    // steps(1,end) so each keyframe snaps instead of sliding — broken hardware,
+    // not a transition. Neutralised by the reduced-motion rule in globals.css.
+    animation: glitching ? `glitch ${GLITCH_MS}ms steps(1,end)` : undefined,
   };
 
   const watermarkStyle = `position:absolute;inset:0;z-index:1;display:grid;grid-template-columns:repeat(${m ? 3 : 4},1fr);grid-auto-rows:${m ? 18 : 22}vh;place-items:center;animation:swell 6s ease-in-out infinite;pointer-events:none`;
@@ -383,7 +404,7 @@ export default function Stage() {
         pixel={0.3}
         cameraZ={cameraZ}
         variant={secret ? 'avatar' : 'face'}
-        variantColors={AVATAR_DMG}
+        variantColors={AVATAR_COLORS}
         ariaLabel={secret ? 'Sculptable low-poly 3D avatar head' : 'Sculptable low-poly 3D head'}
         style={css(faceByScreen[screen])}
       />

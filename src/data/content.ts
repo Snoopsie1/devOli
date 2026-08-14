@@ -201,7 +201,7 @@ export const SECRET_PROJECT: Project = {
   num: '?', year: '20XX', name: 'SNOOPSIE — THE OTHER SAVE FILE',
   blurb: 'What the working hours do not cover.',
   stack: 'WOW · TCG · FGC · FPS', stars: 6,
-  body: 'The unlisted save. Pokémon TCG at Regionals, One Piece at locals, Smash Ultimate at majors, and enough Overwatch that I ended up writing the playbook rather than just reading it. Learn the system, find where it bends, show up on the day it counts. I have also finished Dark Souls twelve times past the point where it stops getting harder, which explains more about how I debug than the other three files do.',
+  body: 'The unlisted save. Pokémon TCG at Regionals, One Piece at locals, Smash Ultimate at majors, and enough Overwatch that I ended up writing the playbook rather than just reading it. Learn the system, find where it bends, show up on the day it counts. I have also taken Dark Souls to NG+12. The scaling stops at +6.',
   // Labels are ~8px Press Start 2P — keep them short, and no accented
   // characters (the display font has no É; the mono values are fine).
   facts: [
