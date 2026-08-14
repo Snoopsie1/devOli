@@ -153,7 +153,7 @@ export default function Stage() {
   const d = dIdx === null ? null : PROJECTS[dIdx];
 
   const bottomSafe = m ? 68 : 0; // room for the phone nav bar
-  const sectionTitle = `flex:none;font-size:${m ? 11 : 13}px;font-weight:400;letter-spacing:3px;color:#ffd23f;text-shadow:0 3px 0 #4a3200;text-align:center`;
+  const sectionTitle = `flex:none;font-size:${m ? 11 : 13}px;font-weight:400;letter-spacing:3px;color:var(--acc);text-shadow:0 3px 0 var(--acc-sh);text-align:center`;
 
   // background watermark: fewer, smaller marks on phone
   const words = ['OLIVER', 'RASOLI'];
@@ -189,59 +189,59 @@ export default function Stage() {
     width: '100vw',
     height: '100dvh',
     overflow: 'hidden',
-    background: 'radial-gradient(120% 90% at 50% 45%, #22246b 0%, #101040 42%, #05050e 100%)',
+    background: 'radial-gradient(120% 90% at 50% 45%, var(--bg-top) 0%, var(--bg-mid) 42%, var(--bg-deep) 100%)',
     fontFamily: 'var(--font-press-start), monospace',
-    color: '#dfe3ff',
+    color: 'var(--tx)',
     userSelect: 'none',
     WebkitTapHighlightColor: 'transparent',
   };
 
   const watermarkStyle = `position:absolute;inset:0;z-index:1;display:grid;grid-template-columns:repeat(${m ? 3 : 4},1fr);grid-auto-rows:${m ? 18 : 22}vh;place-items:center;animation:swell 6s ease-in-out infinite;pointer-events:none`;
-  const markStyle = `font-size:${m ? 18 : 30}px;color:#5b62d8;text-shadow:0 3px 0 #2a2e8a`;
+  const markStyle = `font-size:${m ? 18 : 30}px;color:var(--wm);text-shadow:0 3px 0 var(--wm-sh)`;
 
   const brandStyle = m
     ? 'position:absolute;top:20px;left:0;right:0;z-index:8;display:flex;flex-direction:column;align-items:center;gap:9px;padding:0 16px;text-align:center'
     : 'position:absolute;top:34px;left:44px;z-index:8;display:flex;flex-direction:column;gap:11px';
   // font-weight:400 — Press Start 2P has one weight; an <h1>'s UA bold would synthesize a heavier face.
-  const brandNameStyle = `font-size:${m ? 22 : 20}px;font-weight:400;color:#ffd23f;text-shadow:0 3px 0 #4a3200`;
-  const brandSubStyle = `font-size:${m ? 7 : 9}px;letter-spacing:2px;line-height:1.7;color:#9aa2e8`;
+  const brandNameStyle = `font-size:${m ? 22 : 20}px;font-weight:400;color:var(--acc);text-shadow:0 3px 0 var(--acc-sh)`;
+  const brandSubStyle = `font-size:${m ? 7 : 9}px;letter-spacing:2px;line-height:1.7;color:var(--tx-nav)`;
 
   const navStyle = m
-    ? 'position:absolute;left:0;right:0;bottom:0;z-index:12;display:flex;background:rgba(7,8,32,.94);border-top:3px solid #3b45b8'
+    ? 'position:absolute;left:0;right:0;bottom:0;z-index:12;display:flex;background:var(--nav-bg);border-top:3px solid var(--bd)'
     : 'position:absolute;top:34px;right:44px;z-index:8;display:flex;gap:26px;font-size:12px;letter-spacing:1px';
 
   const bootStyle = `position:absolute;left:0;right:0;bottom:${m ? bottomSafe + 24 : 64}px;z-index:8;display:flex;flex-direction:column;align-items:center;gap:${m ? 14 : 20}px;padding:0 20px`;
-  const pressStyle = `font-size:${m ? 20 : 26}px;color:#ff4d4d;text-shadow:0 4px 0 #3a0000`;
-  const startStyle = `font-size:${m ? 20 : 26}px;color:#ffd23f;text-shadow:0 4px 0 #4a3200`;
-  const bootHintStyle = `font-size:${m ? 7 : 9}px;letter-spacing:1px;line-height:1.8;color:#8f97dd;text-align:center`;
+  const pressStyle = `font-size:${m ? 20 : 26}px;color:var(--press);text-shadow:0 4px 0 var(--press-sh)`;
+  const startStyle = `font-size:${m ? 20 : 26}px;color:var(--acc);text-shadow:0 4px 0 var(--acc-sh)`;
+  const bootHintStyle = `font-size:${m ? 7 : 9}px;letter-spacing:1px;line-height:1.8;color:var(--tx-dim);text-align:center`;
   const bootHint = touch ? 'DRAG MY FACE · DOUBLE-TAP RESETS' : 'DRAG MY FACE · DOUBLE-CLICK RESETS · ENTER TO BEGIN';
 
   const workStyle = `position:absolute;left:0;right:0;top:${m ? 96 : 106}px;bottom:${m ? bottomSafe + 8 : 56}px;z-index:8;display:flex;flex-direction:column;align-items:center;gap:${m ? 12 : 18}px;padding:0 ${m ? 16 : 44}px;box-sizing:border-box`;
   const gridStyle = `flex:1;min-height:0;width:100%;max-width:1000px;overflow:auto;-webkit-overflow-scrolling:touch;display:grid;grid-template-columns:repeat(${m ? 1 : Math.min(PROJECTS.length, 3)},minmax(0,1fr));grid-auto-rows:min-content;gap:${m ? 12 : 16}px;padding:2px 4px 8px;box-sizing:border-box`;
-  const workHintStyle = `flex:none;font-size:${m ? 7 : 9}px;color:#8f97dd;letter-spacing:1px;text-align:center;line-height:1.7`;
+  const workHintStyle = `flex:none;font-size:${m ? 7 : 9}px;color:var(--tx-dim);letter-spacing:1px;text-align:center;line-height:1.7`;
   const workHint = touch ? 'TAP A FILE TO OPEN · SCROLL FOR MORE' : '↑ ↓ ← → TO MOVE · ENTER TO OPEN · ESC TO GO BACK';
 
   const detailWrapStyle = `position:absolute;left:0;right:0;top:${m ? 12 : 110}px;bottom:${m ? bottomSafe + 12 : 60}px;z-index:9;display:flex;justify-content:center;padding:0 ${m ? 12 : 0}px;box-sizing:border-box`;
-  const detailPanelStyle = `width:${m ? '100%' : '820px'};max-width:${m ? '100%' : '88vw'};padding:${m ? '20px 18px' : '36px 40px'};background:rgba(9,10,38,.96);border:3px solid #3b45b8;box-shadow:0 0 0 3px #0a0b26, 0 24px 60px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:${m ? 16 : 22}px;overflow:auto;-webkit-overflow-scrolling:touch;box-sizing:border-box`;
-  const detailTitleStyle = `font-size:${m ? 14 : 22}px;font-weight:400;line-height:1.5;color:#fff;text-shadow:0 3px 0 #1b1f6b`;
-  const detailBodyStyle = `font-family:${MONO};font-size:${m ? 13 : 15}px;line-height:1.75;color:#c2c9f5`;
-  const factsStyle = `display:grid;grid-template-columns:repeat(${m ? 1 : 3},1fr);gap:${m ? 14 : 18}px;padding-top:${m ? 14 : 18}px;border-top:2px solid #2a3090`;
-  const closeStyle = `font-size:9px;letter-spacing:1px;color:#8f97dd;cursor:pointer;flex:none;display:inline-flex;align-items:center;justify-content:center;${m ? 'min-height:48px;padding:0 16px;border:2px solid #3b45b8' : 'padding:2px 0'}`;
+  const detailPanelStyle = `width:${m ? '100%' : '820px'};max-width:${m ? '100%' : '88vw'};padding:${m ? '20px 18px' : '36px 40px'};background:var(--panel);border:3px solid var(--bd);box-shadow:0 0 0 3px var(--panel-ring), 0 24px 60px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:${m ? 16 : 22}px;overflow:auto;-webkit-overflow-scrolling:touch;box-sizing:border-box`;
+  const detailTitleStyle = `font-size:${m ? 14 : 22}px;font-weight:400;line-height:1.5;color:var(--tx-bright);text-shadow:0 3px 0 var(--title-sh)`;
+  const detailBodyStyle = `font-family:${MONO};font-size:${m ? 13 : 15}px;line-height:1.75;color:var(--tx-body2)`;
+  const factsStyle = `display:grid;grid-template-columns:repeat(${m ? 1 : 3},1fr);gap:${m ? 14 : 18}px;padding-top:${m ? 14 : 18}px;border-top:2px solid var(--bd-soft)`;
+  const closeStyle = `font-size:9px;letter-spacing:1px;color:var(--tx-dim);cursor:pointer;flex:none;display:inline-flex;align-items:center;justify-content:center;${m ? 'min-height:48px;padding:0 16px;border:2px solid var(--bd)' : 'padding:2px 0'}`;
   const closeLabel = touch ? 'CLOSE ✕' : '[ESC] CLOSE';
 
   const aboutStyle = m
     ? `position:absolute;left:0;right:0;top:44vh;bottom:${bottomSafe + 8}px;z-index:8;display:flex;flex-direction:column;gap:16px;padding:0 18px;overflow:auto;-webkit-overflow-scrolling:touch;box-sizing:border-box`
     : 'position:absolute;left:7vw;top:150px;width:520px;z-index:8;display:flex;flex-direction:column;gap:24px';
-  const aboutBodyStyle = `font-family:${MONO};font-size:${m ? 13 : 16}px;line-height:1.8;color:#c8cff8`;
+  const aboutBodyStyle = `font-family:${MONO};font-size:${m ? 13 : 16}px;line-height:1.8;color:var(--tx-body)`;
 
   const contactStyle = `position:absolute;left:0;right:0;bottom:${m ? bottomSafe + 20 + 'px' : '12vh'};z-index:8;display:flex;flex-direction:column;align-items:center;gap:${m ? 16 : 22}px;padding:0 18px;box-sizing:border-box`;
   const contactRowStyle = m
     ? 'display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px'
     : 'display:flex;gap:16px';
-  const ctaPrimary = `display:flex;align-items:center;justify-content:center;min-height:${m ? 52 : 0}px;padding:16px 24px;font-size:11px;letter-spacing:1px;color:#05050e;background:#ffd23f;box-shadow:0 5px 0 #7a5f00`;
-  const ctaSecondary = `display:flex;align-items:center;justify-content:center;min-height:${m ? 52 : 0}px;padding:16px 24px;font-size:11px;letter-spacing:1px;color:#dfe3ff;background:#242a9e;box-shadow:0 5px 0 #10144f`;
+  const ctaPrimary = `display:flex;align-items:center;justify-content:center;min-height:${m ? 52 : 0}px;padding:16px 24px;font-size:11px;letter-spacing:1px;color:var(--on-acc);background:var(--acc);box-shadow:0 5px 0 var(--acc-sh2)`;
+  const ctaSecondary = `display:flex;align-items:center;justify-content:center;min-height:${m ? 52 : 0}px;padding:16px 24px;font-size:11px;letter-spacing:1px;color:var(--tx);background:var(--btn2);box-shadow:0 5px 0 var(--btn2-sh)`;
   // Compact secondary button reused for the per-project links inside the detail panel.
-  const detailLinkStyle = `display:inline-flex;align-items:center;justify-content:center;min-height:${m ? 44 : 0}px;padding:${m ? '12px 18px' : '10px 16px'};font-size:10px;letter-spacing:1px;color:#dfe3ff;background:#242a9e;box-shadow:0 4px 0 #10144f`;
+  const detailLinkStyle = `display:inline-flex;align-items:center;justify-content:center;min-height:${m ? 44 : 0}px;padding:${m ? '12px 18px' : '10px 16px'};font-size:10px;letter-spacing:1px;color:var(--tx);background:var(--btn2);box-shadow:0 4px 0 var(--btn2-sh)`;
 
   // Desktop-only: magnify the whole UI layer (brand, nav, all screens) by 1.4×,
   // like a 140% browser zoom, WITHOUT touching the 3D head (it lives outside
@@ -289,8 +289,8 @@ export default function Stage() {
         {navItems.map(([label, key]) => {
           const active = screen === key;
           const style = m
-            ? `flex:1;display:flex;align-items:center;justify-content:center;min-height:52px;font-size:12px;letter-spacing:1px;cursor:pointer;color:${active ? '#05050e' : '#9aa2e8'};background:${active ? '#ffd23f' : 'transparent'}`
-            : `cursor:pointer;padding-bottom:5px;border-bottom:3px solid ${active ? '#ffd23f' : 'transparent'};color:${active || hover === key ? '#ffd23f' : '#9aa2e8'}`;
+            ? `flex:1;display:flex;align-items:center;justify-content:center;min-height:52px;font-size:12px;letter-spacing:1px;cursor:pointer;color:${active ? 'var(--on-acc)' : 'var(--tx-nav)'};background:${active ? 'var(--acc)' : 'transparent'}`
+            : `cursor:pointer;padding-bottom:5px;border-bottom:3px solid ${active ? 'var(--acc)' : 'transparent'};color:${active || hover === key ? 'var(--acc)' : 'var(--tx-nav)'}`;
           return (
             <button
               key={key}
@@ -330,7 +330,7 @@ export default function Stage() {
             <div style={css(gridStyle)}>
               {PROJECTS.map((p, i) => {
                 const active = i === sel;
-                const cardStyle = `width:100%;text-align:left;display:flex;flex-direction:column;gap:9px;padding:${m ? '16px 16px' : '15px 17px'};cursor:pointer;background:${active ? 'rgba(48,56,190,.92)' : 'rgba(12,14,58,.86)'};border:3px solid ${active ? '#ffd23f' : '#3b45b8'};box-shadow:0 6px 0 ${active ? '#7a5f00' : '#141a63'};transform:translateY(${active ? '-4px' : '0'});transition:transform .12s`;
+                const cardStyle = `width:100%;text-align:left;display:flex;flex-direction:column;gap:9px;padding:${m ? '16px 16px' : '15px 17px'};cursor:pointer;background:${active ? 'var(--card-active)' : 'var(--card)'};border:3px solid ${active ? 'var(--acc)' : 'var(--bd)'};box-shadow:0 6px 0 ${active ? 'var(--acc-sh2)' : 'var(--card-sh)'};transform:translateY(${active ? '-4px' : '0'});transition:transform .12s`;
                 return (
                   <button
                     key={p.num}
@@ -354,22 +354,22 @@ export default function Stage() {
                             height={128}
                             loading="lazy"
                             decoding="async"
-                            style={css(`display:block;flex:none;width:${ICON_PX}px;height:${ICON_PX}px;border:2px solid ${active ? '#ffd23f' : '#3b45b8'}`)}
+                            style={css(`display:block;flex:none;width:${ICON_PX}px;height:${ICON_PX}px;border:2px solid ${active ? 'var(--acc)' : 'var(--bd)'}`)}
                           />
                         )}
-                        <span style={{ fontSize: '9px', color: '#ffd23f', letterSpacing: '1px' }}>FILE {p.num}</span>
+                        <span style={{ fontSize: '9px', color: 'var(--acc)', letterSpacing: '1px' }}>FILE {p.num}</span>
                       </span>
-                      <span style={{ fontSize: '9px', color: '#8f97dd', flex: 'none' }}>{p.year}</span>
+                      <span style={{ fontSize: '9px', color: 'var(--tx-dim)', flex: 'none' }}>{p.year}</span>
                     </span>
-                    <span style={{ fontSize: '12px', lineHeight: 1.55, color: '#fff' }}>{p.name}</span>
-                    <span style={{ fontFamily: MONO, fontSize: '12px', lineHeight: 1.55, color: '#a8b0ee' }}>{p.blurb}</span>
+                    <span style={{ fontSize: '12px', lineHeight: 1.55, color: 'var(--tx-bright)' }}>{p.name}</span>
+                    <span style={{ fontFamily: MONO, fontSize: '12px', lineHeight: 1.55, color: 'var(--tx-mid)' }}>{p.blurb}</span>
                     <span style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '2px' }}>
                       <span style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'nowrap' }}>
                         {Array.from({ length: 6 }, (_, k) => (
-                          <span key={k} style={{ fontSize: '13px', color: k < p.stars ? '#ffd23f' : '#2b3184' }}>★</span>
+                          <span key={k} style={{ fontSize: '13px', color: k < p.stars ? 'var(--acc)' : 'var(--star-off)' }}>★</span>
                         ))}
                       </span>
-                      <span style={{ fontSize: '8px', lineHeight: 1.6, color: '#7b83c9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.stack}</span>
+                      <span style={{ fontSize: '8px', lineHeight: 1.6, color: 'var(--tx-dimmer)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.stack}</span>
                     </span>
                   </button>
                 );
@@ -384,7 +384,7 @@ export default function Stage() {
           <div style={css(`${detailWrapStyle};${animCss(detailMode)};pointer-events:auto`)} inert={detailMode === 'out' ? true : undefined}>
             <div style={css(detailPanelStyle)} role="dialog" aria-labelledby="detail-title">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '9px', letterSpacing: '2px', color: '#ffd23f' }}>FILE {d.num} · {d.year}</span>
+                <span style={{ fontSize: '9px', letterSpacing: '2px', color: 'var(--acc)' }}>FILE {d.num} · {d.year}</span>
                 <button type="button" ref={closeBtnRef} onClick={closeDetail} style={css(closeStyle)}>{closeLabel}</button>
               </div>
               <h2 id="detail-title" style={css(detailTitleStyle)}>{d.name}</h2>
@@ -395,8 +395,8 @@ export default function Stage() {
               <div style={css(factsStyle)}>
                 {d.facts.map(([k, v]) => (
                   <div key={k} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <span style={{ fontSize: '8px', letterSpacing: '2px', color: '#7b83c9' }}>{k}</span>
-                    <span style={{ fontFamily: MONO, fontSize: '14px', color: '#eaeeff' }}>{v}</span>
+                    <span style={{ fontSize: '8px', letterSpacing: '2px', color: 'var(--tx-dimmer)' }}>{k}</span>
+                    <span style={{ fontFamily: MONO, fontSize: '14px', color: 'var(--tx-strong)' }}>{v}</span>
                   </div>
                 ))}
               </div>
@@ -419,9 +419,9 @@ export default function Stage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {SKILLS.map(([k, v]) => (
                 <div key={k} style={css(`display:flex;align-items:center;gap:${m ? 10 : 14}px`)}>
-                  <span style={css(`width:${m ? 88 : 120}px;flex:none;font-size:${m ? 7 : 9}px;letter-spacing:1px;color:#9aa2e8`)}>{k}</span>
-                  <div style={{ flex: 1, height: '14px', background: '#141860', border: '2px solid #3b45b8' }}>
-                    <div style={{ height: '100%', width: `${v * 100}%`, background: '#ffd23f' }} />
+                  <span style={css(`width:${m ? 88 : 120}px;flex:none;font-size:${m ? 7 : 9}px;letter-spacing:1px;color:var(--tx-nav)`)}>{k}</span>
+                  <div style={{ flex: 1, height: '14px', background: 'var(--track)', border: '2px solid var(--bd)' }}>
+                    <div style={{ height: '100%', width: `${v * 100}%`, background: 'var(--acc)' }} />
                   </div>
                 </div>
               ))}
@@ -439,7 +439,7 @@ export default function Stage() {
               {SITE.linkedin && <a href={SITE.linkedin} target="_blank" rel="noopener noreferrer" style={css(ctaSecondary)}>LINKEDIN</a>}
             </div>
             {SITE.footnote && (
-              <span style={{ fontSize: '9px', lineHeight: 1.7, color: '#8f97dd', letterSpacing: '1px', textAlign: 'center' }}>
+              <span style={{ fontSize: '9px', lineHeight: 1.7, color: 'var(--tx-dim)', letterSpacing: '1px', textAlign: 'center' }}>
                 {SITE.footnote}
               </span>
             )}

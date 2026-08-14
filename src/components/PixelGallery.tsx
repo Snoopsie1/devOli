@@ -54,11 +54,11 @@ export default function PixelGallery({ shots, mobile }: { shots: Screenshot[]; m
   if (shots.length === 0) return null;
 
   const thumbH = mobile ? 120 : 150;
-  const labelStyle = 'font-size:8px;letter-spacing:2px;color:#7b83c9';
+  const labelStyle = 'font-size:8px;letter-spacing:2px;color:var(--tx-dimmer)';
   const stripStyle = `display:flex;gap:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;padding:4px 4px 10px`;
   const shot = open === null ? null : shots[open];
 
-  const ctlStyle = `display:inline-flex;align-items:center;justify-content:center;min-height:${mobile ? 48 : 44}px;min-width:${mobile ? 48 : 44}px;padding:0 16px;font-size:${mobile ? 11 : 10}px;letter-spacing:1px;color:#dfe3ff;background:#242a9e;box-shadow:0 4px 0 #10144f;cursor:pointer`;
+  const ctlStyle = `display:inline-flex;align-items:center;justify-content:center;min-height:${mobile ? 48 : 44}px;min-width:${mobile ? 48 : 44}px;padding:0 16px;font-size:${mobile ? 11 : 10}px;letter-spacing:1px;color:var(--tx);background:var(--btn2);box-shadow:0 4px 0 var(--btn2-sh);cursor:pointer`;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -71,7 +71,7 @@ export default function PixelGallery({ shots, mobile }: { shots: Screenshot[]; m
             data-shot={i}
             onClick={() => { returnTo.current = i; setOpen(i); }}
             aria-label={`Open screenshot ${i + 1} of ${shots.length}: ${s.caption}`}
-            style={css(`flex:none;height:${thumbH}px;padding:0;cursor:pointer;background:#0a0b26;border:3px solid #3b45b8;box-shadow:0 6px 0 #141a63`)}
+            style={css(`flex:none;height:${thumbH}px;padding:0;cursor:pointer;background:var(--panel-ring);border:3px solid var(--bd);box-shadow:0 6px 0 var(--card-sh)`)}
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- pre-sized WebP; next/image would add an optimizer round-trip for no gain */}
             <img
@@ -94,7 +94,7 @@ export default function PixelGallery({ shots, mobile }: { shots: Screenshot[]; m
           aria-modal="true"
           aria-label={`${shot.caption} — screenshot ${(open ?? 0) + 1} of ${shots.length}`}
           onClick={(e) => { if (e.target === e.currentTarget) close(); }}
-          style={css(`position:fixed;inset:0;z-index:15;display:flex;flex-direction:column;align-items:center;gap:${mobile ? 12 : 16}px;padding:${mobile ? 16 : 28}px;background:rgba(5,5,14,.92);box-sizing:border-box`)}
+          style={css(`position:fixed;inset:0;z-index:15;display:flex;flex-direction:column;align-items:center;gap:${mobile ? 12 : 16}px;padding:${mobile ? 16 : 28}px;background:var(--scrim);box-sizing:border-box`)}
         >
           {/* Scrolls rather than shrinks. These are modest source resolutions —
               downscaling a tall shot to fit the viewport makes it unreadable. */}
@@ -107,14 +107,14 @@ export default function PixelGallery({ shots, mobile }: { shots: Screenshot[]; m
               height={shot.height}
               style={{
                 maxWidth: '92vw', width: 'auto', height: 'auto', flex: 'none',
-                border: '3px solid #3b45b8', boxShadow: '0 0 0 3px #0a0b26, 0 24px 60px rgba(0,0,0,.6)',
+                border: '3px solid var(--bd)', boxShadow: '0 0 0 3px var(--panel-ring), 0 24px 60px rgba(0,0,0,.6)',
               }}
             />
           </div>
-          <span style={css(`flex:none;font-family:${MONO};font-size:${mobile ? 11 : 12}px;color:#c2c9f5;text-align:center`)}>{shot.caption}</span>
+          <span style={css(`flex:none;font-family:${MONO};font-size:${mobile ? 11 : 12}px;color:var(--tx-body2);text-align:center`)}>{shot.caption}</span>
           <div style={{ flex: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button type="button" onClick={() => step(-1)} aria-label="Previous screenshot" style={css(ctlStyle)}>◀</button>
-            <span style={css(`font-size:9px;letter-spacing:1px;color:#8f97dd;min-width:52px;text-align:center`)}>
+            <span style={css(`font-size:9px;letter-spacing:1px;color:var(--tx-dim);min-width:52px;text-align:center`)}>
               {(open ?? 0) + 1} / {shots.length}
             </span>
             <button type="button" onClick={() => step(1)} aria-label="Next screenshot" style={css(ctlStyle)}>▶</button>

@@ -1,3 +1,116 @@
+/* ---------------------------------------------------------------------------
+   Palette tokens.
+
+   The UI is written as inline declaration strings run through `css()`, so every
+   colour used to be a hex literal inside those strings. They are tokens now for
+   one reason: the Konami secret mode repaints the whole site in a Game Boy DMG
+   green ramp, and a single attribute flip is the only sane way to do that
+   without a filter hack (which would also tint the WebGL canvas and the real
+   project screenshots).
+
+   `:root` values are the original N64 palette, byte-for-byte — swapping a
+   literal for its token must never change a pixel. `[data-secret="1"]` is set on
+   <html> by Stage when the code is entered.
+
+   Not tokenised on purpose: the 3D head's materials (three.js colours, swapped
+   via the engine handle), the build-time OG image and icons, and the real
+   project screenshots (owner ruling: they stay full colour).
+--------------------------------------------------------------------------- */
+:root {
+  /* accent — the N64 gold that carries every highlight */
+  --acc: #ffd23f;
+  --acc-sh: #4a3200;   /* text-shadow under gold type */
+  --acc-sh2: #7a5f00;  /* hard offset shadow under gold blocks */
+  --on-acc: #05050e;   /* type sitting on top of the accent */
+
+  /* backgrounds */
+  --bg-deep: #05050e;
+  --bg-mid: #101040;
+  --bg-top: #22246b;
+  --panel: rgba(9, 10, 38, .96);
+  --panel-ring: #0a0b26;
+  --card: rgba(12, 14, 58, .86);
+  --card-active: rgba(48, 56, 190, .92);
+  --nav-bg: rgba(7, 8, 32, .94);
+  --track: #141860;
+  --scrim: rgba(5, 5, 14, .92);
+
+  /* type, brightest to dimmest */
+  --tx-bright: #ffffff;
+  --tx-strong: #eaeeff;
+  --tx: #dfe3ff;
+  --tx-body: #c8cff8;
+  --tx-body2: #c2c9f5;
+  --tx-mid: #a8b0ee;
+  --tx-nav: #9aa2e8;
+  --tx-dim: #8f97dd;
+  --tx-dimmer: #7b83c9;
+
+  /* structure */
+  --bd: #3b45b8;
+  --bd-soft: #2a3090;
+  --card-sh: #141a63;
+  --star-off: #2b3184;
+  --title-sh: #1b1f6b;
+  --wm: #5b62d8;
+  --wm-sh: #2a2e8a;
+
+  /* secondary button */
+  --btn2: #242a9e;
+  --btn2-sh: #10144f;
+
+  /* the "PRESS" half of PRESS START */
+  --press: #ff4d4d;
+  --press-sh: #3a0000;
+}
+
+/* --- Secret mode: Game Boy DMG. -------------------------------------------
+   The DMG's four tones (#0f380f #306230 #8bac0f #9bbc0f) are the anchors. The
+   UI needs ~30 distinct values, so the ramp is extended with intermediate
+   greens rather than collapsed to four — collapsing flattens the type
+   hierarchy into an unreadable mush. Every value stays on the DMG hue. */
+:root[data-secret="1"] {
+  --acc: #9bbc0f;
+  --acc-sh: #0f380f;
+  --acc-sh2: #1c4a18;
+  --on-acc: #0a1f0a;
+
+  --bg-deep: #0a1f0a;
+  --bg-mid: #0f380f;
+  --bg-top: #245c1c;
+  --panel: rgba(15, 56, 15, .96);
+  --panel-ring: #081a08;
+  --card: rgba(13, 45, 13, .86);
+  --card-active: rgba(48, 98, 48, .92);
+  --nav-bg: rgba(10, 31, 10, .94);
+  --track: #163f16;
+  --scrim: rgba(10, 31, 10, .92);
+
+  --tx-bright: #d3e88a;
+  --tx-strong: #c2dc6b;
+  --tx: #9bbc0f;
+  --tx-body: #9bbc0f;
+  --tx-body2: #8bac0f;
+  --tx-mid: #7ba00e;
+  --tx-nav: #6d9412;
+  --tx-dim: #5c840f;
+  --tx-dimmer: #4c7a1c;
+
+  --bd: #306230;
+  --bd-soft: #245c1c;
+  --card-sh: #0f380f;
+  --star-off: #245c1c;
+  --title-sh: #0f380f;
+  --wm: #306230;
+  --wm-sh: #163f16;
+
+  --btn2: #306230;
+  --btn2-sh: #0f380f;
+
+  --press: #6d9412;
+  --press-sh: #0f380f;
+}
+
 * {
   box-sizing: border-box;
   padding: 0;
@@ -11,18 +124,18 @@ html {
 html,
 body {
   height: 100%;
-  background: #05050e;
+  background: var(--bg-deep);
   overflow: hidden;
   font-family: var(--font-press-start), monospace;
 }
 
 a {
-  color: #9aa2e8;
+  color: var(--tx-nav);
   text-decoration: none;
 }
 
 a:hover {
-  color: #ffd23f;
+  color: var(--acc);
 }
 
 /* Converted pixel buttons — inline styles stay authoritative; this only
@@ -46,7 +159,7 @@ a:focus:not(:focus-visible) {
 }
 button:focus-visible,
 a:focus-visible {
-  outline: 3px solid #ffd23f;
+  outline: 3px solid var(--acc);
   outline-offset: 2px;
 }
 
