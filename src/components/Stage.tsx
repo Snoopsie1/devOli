@@ -276,9 +276,11 @@ export default function Stage() {
       <div style={css(uiWrapStyle)}>
       {/* brand */}
       <div style={css(brandStyle + ';pointer-events:auto')}>
-        <h1 style={css(brandNameStyle)}>
+        {/* Not an <h1>: the page's single h1 lives in the server-rendered
+            summary in `src/app/page.tsx`. Styling is unchanged. */}
+        <div style={css(brandNameStyle)}>
           <button type="button" onClick={() => go('boot')} style={{ cursor: 'pointer' }}>{SITE.name}</button>
-        </h1>
+        </div>
         <span style={css(brandSubStyle)}>{SITE.subtitle}</span>
       </div>
 
