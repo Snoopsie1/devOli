@@ -11,6 +11,9 @@ type SculptFaceProps = SculptFaceOptions & {
   variant?: HeadVariant;
   /** Colours for the avatar variant. MUST be a stable reference (module const). */
   variantColors?: { skin?: string; ink?: string };
+  /** Skip the scramble and swap immediately — used when restoring a persisted
+   *  mode on load, where the user did nothing and a glitch would read as jank. */
+  variantInstant?: boolean;
 };
 
 /**
@@ -19,7 +22,7 @@ type SculptFaceProps = SculptFaceOptions & {
  * sculpt state persists across every screen change — the parent only mutates
  * this host div's style. Never give this component a `key` that changes.
  */
-export default function SculptFace({ skin, brush, pixel, cameraZ, variant, variantColors, className, style, ariaLabel }: SculptFaceProps) {
+export default function SculptFace({ skin, brush, pixel, cameraZ, variant, variantColors, variantInstant, className, style, ariaLabel }: SculptFaceProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const handleRef = useRef<SculptFaceHandle | null>(null);
   // Freeze the options at first render — they must never re-init the engine.
@@ -45,10 +48,17 @@ export default function SculptFace({ skin, brush, pixel, cameraZ, variant, varia
     if (cameraZ != null) handleRef.current?.setCameraZ(cameraZ);
   }, [cameraZ]);
 
+  // Read, never a dependency: this only qualifies HOW a swap plays, so putting
+  // it in the deps below would replay the swap when it changes on its own.
+  // Declared BEFORE the swap effect so that on a commit where the variant and
+  // this flag change together, the swap already sees the new value.
+  const instantRef = useRef(variantInstant);
+  useEffect(() => { instantRef.current = variantInstant; }, [variantInstant]);
+
   // Live head swap, same contract as the camera above: the engine stays mounted
   // and only its geometry is rebuilt. Sculpt state resets on a swap by design.
   useEffect(() => {
-    if (variant != null) handleRef.current?.setHead(variant, variantColors);
+    if (variant != null) handleRef.current?.setHead(variant, variantColors, { instant: instantRef.current });
   }, [variant, variantColors]);
 
   return <div ref={hostRef} className={className} style={style} role={ariaLabel ? 'img' : undefined} aria-label={ariaLabel} />;

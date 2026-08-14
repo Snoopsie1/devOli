@@ -279,8 +279,17 @@ export interface SculptFaceHandle {
    * layout, so there is nothing to carry over. Orientation (`spin`) is kept so
    * the new head arrives facing the way the old one did.
    */
-  setHead(variant: HeadVariant, colors?: { skin?: string; ink?: string }): void;
+  setHead(variant: HeadVariant, colors?: { skin?: string; ink?: string }, opts?: { instant?: boolean }): void;
 }
+
+/* Mesh-scramble envelope for a head swap. The vertices blow apart into static,
+   the geometry is exchanged at peak noise so the change itself is never seen,
+   then the new head reassembles. Total duration matches the CSS `glitch`
+   keyframes in globals.css (GLITCH_MS in Stage.tsx) — keep the three in sync. */
+const SCRAMBLE_PEAK_MS = 140;   // fall apart
+const SCRAMBLE_SETTLE_MS = 240; // reassemble
+/** Peak displacement in head units. The skull has radius ~1. */
+const SCRAMBLE_AMP = 0.42;
 
 interface Part {
   mesh: THREE.Mesh;
@@ -288,6 +297,10 @@ interface Part {
   rest: Float32Array;
   base: Float32Array;
   snap?: Float32Array;
+  /** Fixed per-vertex random field, sampled at a rotating offset each frame so
+   *  the scramble shimmers like static without calling Math.random() per
+   *  vertex per frame (the face head is ~20k vertices). */
+  noise: Float32Array;
 }
 
 interface Grab {
@@ -341,11 +354,14 @@ export function createSculptFace(host: HTMLElement, options: SculptFaceOptions =
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh) return;
       const p = mesh.geometry.attributes.position as THREE.BufferAttribute;
+      const noise = new Float32Array(p.array.length);
+      for (let i = 0; i < noise.length; i++) noise[i] = Math.random() * 2 - 1;
       parts.push({
         mesh,
         pos: p,
         rest: Float32Array.from(p.array as ArrayLike<number>),
         base: new Float32Array(p.array.length),
+        noise,
       });
     });
   }
@@ -369,6 +385,12 @@ export function createSculptFace(host: HTMLElement, options: SculptFaceOptions =
   let resetT = 0;
   let springK = 1;
   let springV = 0;
+  // Head-swap scramble. `scrambleT` is elapsed ms into the envelope, or -1 when
+  // idle; `pending` is the head waiting to be swapped in at peak noise.
+  let scrambleT = -1;
+  let scramble = 0;
+  let noiseOffset = 0;
+  let pending: { next: HeadVariant; colors?: { skin?: string; ink?: string } } | null = null;
   const clock = new THREE.Clock();
   // Double-tap / double-click reset tracking (unified for mouse + touch).
   let downPt: { x: number; y: number; t: number } | null = null;
@@ -515,7 +537,25 @@ export function createSculptFace(host: HTMLElement, options: SculptFaceOptions =
       }
     }
 
+    // Head-swap scramble envelope: apart, exchange the geometry while it is
+    // unrecognisable, back together.
+    if (scrambleT >= 0) {
+      scrambleT += dt * 1000;
+      if (scrambleT < SCRAMBLE_PEAK_MS) {
+        scramble = scrambleT / SCRAMBLE_PEAK_MS;
+      } else {
+        if (pending) { swapNow(pending.next, pending.colors); pending = null; }
+        const x = (scrambleT - SCRAMBLE_PEAK_MS) / SCRAMBLE_SETTLE_MS;
+        scramble = x >= 1 ? 0 : 1 - x;
+        if (x >= 1) scrambleT = -1;
+      }
+      // Rotate where the static is sampled from so it churns frame to frame.
+      // 3-aligned to keep each vertex's xyz reading consecutive noise.
+      noiseOffset += 999;
+    }
+
     const g = grab, d = g && g.dir, r = brush;
+    const amp = scramble * SCRAMBLE_AMP;
     for (const p of parts) {
       const { rest, base, pos } = p;
       const arr = pos.array as unknown as number[];
@@ -529,6 +569,10 @@ export function createSculptFace(host: HTMLElement, options: SculptFaceOptions =
         }
       } else {
         for (let i = 0; i < rest.length; i++) arr[i] = rest[i] + base[i];
+      }
+      if (amp > 0) {
+        const n = p.noise, nl = n.length, off = noiseOffset % nl;
+        for (let i = 0; i < arr.length; i++) arr[i] += n[(i + off) % nl] * amp;
       }
       pos.needsUpdate = true;
       p.mesh.geometry.computeVertexNormals();
@@ -567,8 +611,8 @@ export function createSculptFace(host: HTMLElement, options: SculptFaceOptions =
     });
   }
 
-  function setHead(next: HeadVariant, colors?: { skin?: string; ink?: string }): void {
-    if (next === variant) return;
+  function setHead(next: HeadVariant, colors?: { skin?: string; ink?: string }, opts?: { instant?: boolean }): void {
+    if (next === variant || pending?.next === next) return;
 
     // Abandon any in-flight interaction: `grab.local` is a point in the old
     // head's space and the spring is mid-flight against buffers about to die.
@@ -577,6 +621,17 @@ export function createSculptFace(host: HTMLElement, options: SculptFaceOptions =
     resetT = 0;
     canvas.style.cursor = 'grab';
 
+    if (opts?.instant) {
+      swapNow(next, colors);
+      return;
+    }
+    // Hand off to the render loop: it scrambles the current head apart, calls
+    // swapNow at peak noise, then reassembles. See the SCRAMBLE_* constants.
+    pending = { next, colors };
+    scrambleT = 0;
+  }
+
+  function swapNow(next: HeadVariant, colors?: { skin?: string; ink?: string }): void {
     scene.remove(headGroup);
     disposeGroup(headGroup);
 

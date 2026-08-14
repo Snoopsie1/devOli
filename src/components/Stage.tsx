@@ -405,6 +405,10 @@ export default function Stage() {
         cameraZ={cameraZ}
         variant={secret ? 'avatar' : 'face'}
         variantColors={AVATAR_COLORS}
+        // Only a real toggle raises `glitching`; a mode restored from
+        // sessionStorage on load swaps silently instead of glitching at someone
+        // who has not touched anything yet.
+        variantInstant={!glitching}
         ariaLabel={secret ? 'Sculptable low-poly 3D avatar head' : 'Sculptable low-poly 3D head'}
         style={css(faceByScreen[screen])}
       />
