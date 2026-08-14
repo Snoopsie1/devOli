@@ -189,7 +189,7 @@ export const SECRET_SITE: Pick<Site, 'name' | 'subtitle' | 'bio'> = {
 /** Player Profile bars while secret mode is on. Labels max ~12 characters —
  *  the label column is a fixed 120px and anything longer wraps to two lines. */
 export const SECRET_SKILLS: [string, number][] = [
-  ['DECKBUILDING', 0.88], ['GAME SENSE', 0.85], ['CLUTCH', 0.62],
+  ['DECKBUILDING', 0.88], ['SHOTCALLING', 0.9], ['GAME SENSE', 0.85],
   ['TOUCH GRASS', 0.31], ['BACKLOG', 0.12],
 ];
 
@@ -200,12 +200,17 @@ export const SECRET_SKILLS: [string, number][] = [
 export const SECRET_PROJECT: Project = {
   num: '?', year: '20XX', name: 'SNOOPSIE — THE OTHER SAVE FILE',
   blurb: 'What the working hours do not cover.',
-  stack: 'TCG · FPS · TOO MANY HOURS', stars: 6,
-  body: 'The unlisted save. Twenty-odd years of games, a card collection that outlived several formats, and the specific kind of stubbornness that makes someone rebuild a deck at 2am because one card felt wrong. None of it is on the CV, all of it explains how I debug.',
+  stack: 'WOW · TCG · FGC · FPS', stars: 6,
+  body: 'The unlisted save. Pokémon TCG at Regionals, One Piece at locals, Smash Ultimate at majors, and enough Overwatch that I ended up writing the playbook rather than just reading it. Learn the system, find where it bends, show up on the day it counts. I have also finished Dark Souls twelve times past the point where it stops getting harder, which explains more about how I debug than the other three files do.',
+  // Labels are ~8px Press Start 2P — keep them short, and no accented
+  // characters (the display font has no É; the mono values are fine).
   facts: [
-    ['MAIN', 'Placeholder — owner to fill'],
-    ['TCG', 'Placeholder — owner to fill'],
-    ['PEAK RANK', 'Placeholder — owner to fill'],
-    ['HOURS', 'Do not ask'],
+    ['MAIN', 'WoW — Arcane Mage'],
+    ['RAIDING', 'Ahead of the Curve, several tiers'],
+    ['POKEMON TCG', 'Regionals · best 1666 / 4010'],
+    ['ONE PIECE TCG', '2nd of 40'],
+    ['SMASH ULTIMATE', '2nd · major side event'],
+    ['OVERWATCH', 'Master · shotcaller · won an intl cup'],
   ],
+  links: [['RAIDER.IO', 'https://raider.io/characters/eu/draenor/Murkov']],
 };
