@@ -31,13 +31,13 @@ export interface Project {
   links?: [string, string][];
   // Optional. Omit and the detail panel renders exactly as it did before.
   screenshots?: Screenshot[];
-  // Optional square mark shown on the file-select card, e.g.
-  // '/projects/<slug>/icon.webp'. Decorative — the card already names the
-  // project — so it renders with an empty alt. Omit and the card is unchanged.
+  // Optional square mark shown on the file-select card — a 128px WebP under
+  // '/projects/<slug>/icon.webp' for real work, '/secret/<game>.webp' for the
+  // hidden files. Decorative — the card already names the project — so it
+  // renders with an empty alt. Omit and the card is unchanged.
   icon?: string;
-  // Appends a `SECRETS  0 / 1` line to this project's facts, flipping to
-  // `1 / 1` once the Konami code has been entered. The only hint that the
-  // secret exists, so exactly one project should carry it.
+  // Appends a `SECRETS  0 / 1` line to this project's facts. The only hint
+  // that the secret exists, so exactly one project carries it.
   secretCounter?: boolean;
 }
 
@@ -174,9 +174,6 @@ export const SKILLS: [string, number][] = [
    deliberately kept OUT of `PROJECTS` and `SITE`, because `src/app/page.tsx`
    renders those into the crawlable SSR summary. Nothing here should reach a
    search engine — the whole point is that you have to find it.
-
-   ⚠️ OWNER: the copy below is placeholder. Replace the achievements with real
-   ones before this ships.
 --------------------------------------------------------------------------- */
 
 /** Identity overrides applied while secret mode is on. Client-side only. */
@@ -186,6 +183,13 @@ export const SECRET_SITE: Pick<Site, 'name' | 'subtitle' | 'bio'> = {
   bio: 'Off the clock I go by Snoopsie. Same person, fewer standups. Most of what I know about systems I learned from games that never explained themselves, and most of what I know about probability I paid for in booster packs. Poke the head, it still works.',
 };
 
+/**
+ * Nominative-use note for the game marks on the hidden files, shown at the
+ * foot of the Player Profile in secret mode only — it has no business on the
+ * professional side, where no third-party marks appear.
+ */
+export const SECRET_NOTE = 'GAME MARKS BELONG TO THEIR OWNERS · FAN USE, NO AFFILIATION';
+
 /** Player Profile bars while secret mode is on. Labels max ~12 characters —
  *  the label column is a fixed 120px and anything longer wraps to two lines. */
 export const SECRET_SKILLS: [string, number][] = [
@@ -194,23 +198,65 @@ export const SECRET_SKILLS: [string, number][] = [
 ];
 
 /**
- * The fourth file card, revealed only in secret mode. `num` is '?' rather than
- * a letter so it reads as a hidden slot next to FILE A / B / C.
+ * The hidden file cards, revealed only in secret mode and appended after
+ * FILE A / B / C. `num` is `?1`…`?N` rather than letters so they read as
+ * locked slots that were always there. One achievement per file — each gets
+ * its own mark, title and write-up, exactly like a real project.
+ *
+ * Names render in ~12px Press Start 2P: no accented characters (there is no É
+ * in the face) and keep them to about 34 characters. Fact labels are ~8px and
+ * sit three-across on desktop, so max three facts per file. Bodies and fact
+ * values are mono and can use anything.
  */
-export const SECRET_PROJECT: Project = {
-  num: '?', year: '20XX', name: 'SNOOPSIE — THE OTHER SAVE FILE',
-  blurb: 'What the working hours do not cover.',
-  stack: 'WOW · TCG · FGC · FPS', stars: 6,
-  body: 'The unlisted save. Pokémon TCG at Regionals, One Piece at locals, Smash Ultimate at majors, and enough Overwatch that I ended up writing the playbook rather than just reading it. Learn the system, find where it bends, show up on the day it counts. I have also taken Dark Souls to NG+12. The scaling stops at +6.',
-  // Labels are ~8px Press Start 2P — keep them short, and no accented
-  // characters (the display font has no É; the mono values are fine).
-  facts: [
-    ['MAIN', 'WoW — Arcane Mage'],
-    ['RAIDING', 'Ahead of the Curve, several tiers'],
-    ['POKEMON TCG', 'Regionals · best 1666 / 4010'],
-    ['ONE PIECE TCG', '2nd of 40'],
-    ['SMASH ULTIMATE', '2nd · major side event'],
-    ['OVERWATCH', 'Master · shotcaller · won an intl cup'],
-  ],
-  links: [['RAIDER.IO', 'https://raider.io/characters/eu/draenor/Murkov']],
-};
+export const SECRET_PROJECTS: Project[] = [
+  {
+    num: '?1', year: '20XX', name: 'WORLD OF WARCRAFT — ARCANE MAGE',
+    blurb: 'The main. Fifteen buttons, one correct order.',
+    stack: 'WOW · MMO · PVE', stars: 5, icon: '/secret/wow.webp',
+    body: 'Arcane Mage, Draenor EU. The spec that is either the whole meter or a smoking crater, depending on whether you can hold a rotation together while the room is trying to kill you. Most of what I know about reading a system before it explains itself, I learned here.',
+    facts: [['MAIN', 'Arcane Mage'], ['REALM', 'Draenor · EU'], ['ROLE', 'Ranged DPS']],
+    links: [['RAIDER.IO', 'https://raider.io/characters/eu/draenor/Murkov']],
+  },
+  {
+    num: '?2', year: '20XX', name: 'AHEAD OF THE CURVE',
+    blurb: 'The final boss down while it still counted.',
+    stack: 'WOW · RAIDING · GUILD', stars: 5, icon: '/secret/wow.webp',
+    body: 'Ahead of the Curve across several tiers — the end boss killed before the patch that makes it easy. Twenty people, one fight, weeks of wipes, and the actual skill being the one nobody puts on a CV: showing up on a Wednesday, again, with notes from last Wednesday.',
+    facts: [['ACHIEVEMENT', 'Ahead of the Curve'], ['TIERS', 'Several'], ['FORMAT', '20-player heroic']],
+  },
+  {
+    num: '?3', year: '20XX', name: 'POKEMON TCG — REGIONALS',
+    blurb: '4010 players. Paper. No undo button.',
+    stack: 'POKEMON TCG · PAPER · REGIONALS', stars: 4, icon: '/secret/pokemon.webp',
+    body: 'A Regional field of 4010 players, finishing 1666. Nine hours of Swiss where every round is a fresh unknown deck and the only information you get is what your opponent has already been forced to show you. Most of what I know about probability I paid for in booster packs.',
+    facts: [['EVENT', 'Regionals'], ['FIELD', '4010 players'], ['FINISH', '1666th']],
+  },
+  {
+    num: '?4', year: '20XX', name: 'ONE PIECE TCG — 2ND OF 40',
+    blurb: 'Second place, and the finals went the distance.',
+    stack: 'ONE PIECE TCG · LOCALS', stars: 5, icon: '/secret/onepiece.webp',
+    body: 'Second of forty at locals in a game young enough that there was no solved list to copy — you built the deck from first principles or you lost to someone who did. Deckbuilding is just API design with a worse error message.',
+    facts: [['EVENT', 'Locals'], ['FIELD', '40 players'], ['FINISH', '2nd']],
+  },
+  {
+    num: '?5', year: '20XX', name: 'SMASH ULTIMATE — 2ND AT A MAJOR',
+    blurb: 'A major side event, one set from the top.',
+    stack: 'SMASH ULTIMATE · FGC · BRACKET', stars: 5, icon: '/secret/smashbros.webp',
+    body: 'Second place in a side event at a major. Double elimination, no coaching, no pause — you adapt between stocks or you go home. The fighting game community is the only place I have seen where the person who beats you then explains exactly how they did it.',
+    facts: [['EVENT', 'Major · side event'], ['FORMAT', 'Double elimination'], ['FINISH', '2nd']],
+  },
+  {
+    num: '?6', year: '20XX', name: 'OVERWATCH — MASTER SHOTCALLER',
+    blurb: 'Master rank, and the voice making the calls.',
+    stack: 'OVERWATCH · FPS · IGL', stars: 6, icon: '/secret/overwatch.webp',
+    body: 'Master rank, and the one on comms calling it — which is a different job from playing well. You are holding the whole team state in your head, deciding when the fight is worth taking, and being wrong out loud fast enough that everyone can still act on it. Ended up writing the playbook rather than just reading it, and the team won an international cup with it.',
+    facts: [['RANK', 'Master'], ['ROLE', 'Shotcaller / IGL'], ['PEAK', 'Won an intl cup']],
+  },
+  {
+    num: '?7', year: '20XX', name: 'DARK SOULS — NG PLUS 12',
+    blurb: 'The scaling stops at +6. I did not.',
+    stack: 'DARK SOULS · NG+ · SOLO', stars: 6, icon: '/secret/darksouls.webp',
+    body: 'Same save, twelve times through. Enemy scaling caps at NG+6, so the last six runs are the same difficulty and purely a question of whether you still want to. Turns out I did. There is no reward screen for this one, which is sort of the point.',
+    facts: [['CYCLE', 'NG+12'], ['SCALING CAP', 'NG+6'], ['REWARD', 'None. Correct.']],
+  },
+];

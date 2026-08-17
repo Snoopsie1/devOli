@@ -48,7 +48,9 @@ no Tailwind — bespoke pixel styles. Fonts via `next/font/google` (Press Start
     `public/og/head.png` is the same render, embedded as base64 by
     `opengraph-image.tsx` at build.
   - Per-project marks: optional `icon` on a `Project`, cropped from that
-    project's own artwork, shown on its file-select card.
+    project's own artwork, shown on its file-select card. The Konami files use
+    the same field against game marks in `public/secret/<game>.webp` — 128px
+    WebP, same convention as the project icons.
 - Inline styles are written as CSS declaration strings run through `css()` in
   `src/lib/css.ts`. Any new component matches that idiom, no CSS modules.
 - Colours are CSS custom properties defined in `src/app/globals.css`, never hex

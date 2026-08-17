@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import dynamic from 'next/dynamic';
-import { PROJECTS, SECRET_PROJECT, SECRET_SITE, SECRET_SKILLS, SKILLS, SITE } from '@/data/content';
+import { PROJECTS, SECRET_NOTE, SECRET_PROJECTS, SECRET_SITE, SECRET_SKILLS, SKILLS, SITE } from '@/data/content';
 import { css, MONO } from '@/lib/css';
 import { blip } from '@/lib/blip';
 import PixelGallery from '@/components/PixelGallery';
@@ -21,7 +21,8 @@ const ICON_PX = 34;
 /* --- Konami secret mode ---------------------------------------------------
    Up up down down left right left right B A flips the site into a Game Boy
    DMG palette, swaps the head for the owner's avatar, renames him to Snoopsie
-   and reveals a fourth file. The hint is the `SECRETS 0 / 1` stat on the
+   and swaps the whole file list for the hobby save — one file per achievement,
+   no professional work in it. The hint is the `SECRETS 0 / 1` stat on the
    DEV 64 file. Entering the code again turns it back off.
 
    Deliberately client-only and session-scoped: it never touches metadata,
@@ -29,8 +30,12 @@ const ICON_PX = 34;
 const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 const SECRET_KEY = 'dev64:secret';
 // Touch has no arrow keys, and the head canvas already owns every tap and drag
-// (sculpt / orbit / double-tap reset), so the gesture lives on the brand name.
-const HOLD_MS = 800;
+// (sculpt / orbit / double-tap reset), so the second way in is the hint itself:
+// tap the `SECRETS 0 / 1` stat this many times. You only reach it by opening
+// FILE B, reading the facts and noticing a counter that never fills, which is
+// the right filter — nobody arrives here by accident. Silent for the first
+// three taps, then the value starts coming apart so you know to keep going.
+const SECRET_TAPS = 6;
 // The avatar keeps its real grey rather than joining the DMG ramp — it reads as
 // the actual Discord avatar dropped into a Game Boy, which is the joke. Values
 // are the handoff defaults. Module-level so the reference is stable across
@@ -104,12 +109,13 @@ export default function Stage() {
       glitchTimer.current = null;
     }, GLITCH_MS);
 
-    if (next) return;
-    // Turning it off shrinks the file list by one. Never leave the selection,
-    // an open detail, or an exiting detail pointing at the vanished index.
-    setSel((s) => Math.min(s, PROJECTS.length - 1));
-    setDetail((cur) => (cur !== null && cur >= PROJECTS.length ? null : cur));
-    setLeaving((l) => (l && l.detailIdx !== null && l.detailIdx >= PROJECTS.length ? null : l));
+    // Either direction replaces the file list wholesale, so every index into it
+    // is now meaningless. Reset the selection and drop any open or exiting
+    // detail rather than leave the panel showing a different file under the
+    // same header — the glitch covers the hard cut.
+    setSel(0);
+    setDetail(null);
+    setLeaving(null);
   }, []);
 
   // Restore first — this runs before the persisting effect below reads `secret`.
@@ -157,28 +163,25 @@ export default function Stage() {
     return () => window.removeEventListener('keydown', onKey);
   }, [toggleSecret]);
 
-  // Touch path: hold the brand name. `held` suppresses the click that would
-  // otherwise fire straight after and navigate back to the title screen.
-  const holdTimer = useRef<number | null>(null);
-  const held = useRef(false);
-  const cancelHold = useCallback(() => {
-    if (holdTimer.current !== null) {
-      clearTimeout(holdTimer.current);
-      holdTimer.current = null;
-    }
-  }, []);
-  const startHold = useCallback(() => {
-    held.current = false;
-    cancelHold();
-    holdTimer.current = window.setTimeout(() => {
-      held.current = true;
-      holdTimer.current = null;
-      toggleSecret();
-    }, HOLD_MS);
-  }, [cancelHold, toggleSecret]);
-  useEffect(() => cancelHold, [cancelHold]);
+  // Touch path: tap the SECRETS stat SECRET_TAPS times. Reset whenever the
+  // detail panel is opened, so a half-entered code never carries over.
+  // Counted on a ref, mirrored into state only to redraw the label — two taps
+  // inside one React batch would both read a stale `taps` and cancel out.
+  const tapsRef = useRef(0);
+  const [taps, setTaps] = useState(0);
+  const bumpSecret = useCallback(() => {
+    const next = tapsRef.current + 1;
+    tapsRef.current = next < SECRET_TAPS ? next : 0;
+    setTaps(tapsRef.current);
+    if (next >= SECRET_TAPS) toggleSecret(); // closes the panel and fires the glitch
+  }, [toggleSecret]);
+  // What the stat reads at each stage. It holds at `0 / 1` while you could
+  // still be tapping it by accident, then decays.
+  const secretValue = taps < 4 ? '0 / 1' : taps < 5 ? '0 / ?' : '? / ?';
 
-  const projects = secret ? [...PROJECTS, SECRET_PROJECT] : PROJECTS;
+  // Secret mode is off the clock: the file list becomes hobbies only, with no
+  // professional work in it at all.
+  const projects = secret ? SECRET_PROJECTS : PROJECTS;
   const fileCount = projects.length;
 
   const currentView: View = detail !== null ? 'detail' : screen;
@@ -206,6 +209,8 @@ export default function Stage() {
     setLeaving({ view: 'work', detailIdx: null });
     setDetail(i);
     setSel(i);
+    tapsRef.current = 0;
+    setTaps(0);
   }, []);
 
   const closeDetail = useCallback(() => {
@@ -284,10 +289,19 @@ export default function Stage() {
   const bottomSafe = m ? 68 : 0; // room for the phone nav bar
   const sectionTitle = `flex:none;font-size:${m ? 11 : 13}px;font-weight:400;letter-spacing:3px;color:var(--acc);text-shadow:0 3px 0 var(--acc-sh);text-align:center`;
 
-  // background watermark: fewer, smaller marks on phone
+  // background watermark: fewer, smaller marks on phone.
+  // Secret mode's words are 8 characters against the usual 6 — 240px at the
+  // desktop size, which only clears a 4-column grid above a 960px viewport. So
+  // it drops a column instead of shrinking the type: the marks stay exactly as
+  // big as OLIVER / RASOLI and the wider cells keep them off the edge.
   const words = secret ? ['SNOOPSIE', 'PLAYER 1'] : ['OLIVER', 'RASOLI'];
-  const count = m ? 12 : 16;
-  const marks = Array.from({ length: count }, (_, i) => words[(i + Math.floor(i / (m ? 3 : 4))) % 2]);
+  const wmCols = secret ? (m ? 2 : 3) : (m ? 3 : 4);
+  // ×4 rows, which is what fills the viewport at the row heights set below.
+  const count = wmCols * 4;
+  // Column parity + row parity, so the two words tile as diagonal stripes for
+  // any column count. (Offsetting by row alone collapses to vertical stripes
+  // whenever the column count is odd.)
+  const marks = Array.from({ length: count }, (_, i) => words[((i % wmCols) + Math.floor(i / wmCols)) % 2]);
 
   // Face placement per screen and per device. Normalised to vw/vh (no `auto`)
   // so CSS can interpolate every edge, and glided via a transition on the
@@ -328,11 +342,8 @@ export default function Stage() {
     animation: glitching ? `glitch ${GLITCH_MS}ms steps(1,end)` : undefined,
   };
 
-  const watermarkStyle = `position:absolute;inset:0;z-index:1;display:grid;grid-template-columns:repeat(${m ? 3 : 4},1fr);grid-auto-rows:${m ? 18 : 22}vh;place-items:center;animation:swell 6s ease-in-out infinite;pointer-events:none`;
-  // The secret words are 8 characters against the usual 6, which overflows the
-  // fixed 3/4-column grid and clips them at the viewport edge. Scale to fit.
-  const markPx = secret ? (m ? 13 : 23) : (m ? 18 : 30);
-  const markStyle = `font-size:${markPx}px;color:var(--wm);text-shadow:0 3px 0 var(--wm-sh)`;
+  const watermarkStyle = `position:absolute;inset:0;z-index:1;display:grid;grid-template-columns:repeat(${wmCols},1fr);grid-auto-rows:${m ? 18 : 22}vh;place-items:center;animation:swell 6s ease-in-out infinite;pointer-events:none`;
+  const markStyle = `font-size:${m ? 18 : 30}px;color:var(--wm);text-shadow:0 3px 0 var(--wm-sh);white-space:nowrap`;
 
   const brandStyle = m
     ? 'position:absolute;top:20px;left:0;right:0;z-index:8;display:flex;flex-direction:column;align-items:center;gap:9px;padding:0 16px;text-align:center'
@@ -352,9 +363,11 @@ export default function Stage() {
   const bootHint = touch ? 'DRAG MY FACE · DOUBLE-TAP RESETS' : 'DRAG MY FACE · DOUBLE-CLICK RESETS · ENTER TO BEGIN';
 
   const workStyle = `position:absolute;left:0;right:0;top:${m ? 96 : 106}px;bottom:${m ? bottomSafe + 8 : 56}px;z-index:8;display:flex;flex-direction:column;align-items:center;gap:${m ? 12 : 18}px;padding:0 ${m ? 16 : 44}px;box-sizing:border-box`;
-  const gridStyle = `flex:1;min-height:0;width:100%;max-width:1000px;overflow:auto;-webkit-overflow-scrolling:touch;display:grid;grid-template-columns:repeat(${m ? 1 : Math.min(fileCount, 3)},minmax(0,1fr));grid-auto-rows:min-content;gap:${m ? 12 : 16}px;padding:2px 4px 8px;box-sizing:border-box`;
+  // The top padding has to clear the selected card's 4px translateY lift, or
+  // this scroll container clips its top border. Bottom clears the 6px shadow.
+  const gridStyle = `flex:1;min-height:0;width:100%;max-width:1000px;overflow:auto;-webkit-overflow-scrolling:touch;display:grid;grid-template-columns:repeat(${m ? 1 : Math.min(fileCount, 3)},minmax(0,1fr));grid-auto-rows:min-content;gap:${m ? 12 : 16}px;padding:6px 4px 8px;box-sizing:border-box`;
   const workHintStyle = `flex:none;font-size:${m ? 7 : 9}px;color:var(--tx-dim);letter-spacing:1px;text-align:center;line-height:1.7`;
-  const workHint = touch ? 'TAP A FILE TO OPEN · SCROLL FOR MORE' : '↑ ↓ ← → TO MOVE · ENTER TO OPEN · ESC TO GO BACK';
+  const workHint = touch ? 'TAP A FILE TO OPEN · TAP OUTSIDE TO GO BACK' : '↑ ↓ ← → TO MOVE · ENTER TO OPEN · CLICK OUTSIDE TO GO BACK';
 
   const detailWrapStyle = `position:absolute;left:0;right:0;top:${m ? 12 : 110}px;bottom:${m ? bottomSafe + 12 : 60}px;z-index:9;display:flex;justify-content:center;padding:0 ${m ? 12 : 0}px;box-sizing:border-box`;
   const detailPanelStyle = `width:${m ? '100%' : '820px'};max-width:${m ? '100%' : '88vw'};padding:${m ? '20px 18px' : '36px 40px'};background:var(--panel);border:3px solid var(--bd);box-shadow:0 0 0 3px var(--panel-ring), 0 24px 60px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:${m ? 16 : 22}px;overflow:auto;-webkit-overflow-scrolling:touch;box-sizing:border-box`;
@@ -420,22 +433,7 @@ export default function Stage() {
         {/* Not an <h1>: the page's single h1 lives in the server-rendered
             summary in `src/app/page.tsx`. Styling is unchanged. */}
         <div style={css(brandNameStyle)}>
-          {/* Also the touch trigger for the secret: hold it for HOLD_MS. The
-              pointer handlers cannot live on the head — that canvas already
-              owns tap, drag and double-tap. */}
-          <button
-            type="button"
-            onClick={() => {
-              if (held.current) { held.current = false; return; } // consume the long-press
-              go('boot');
-            }}
-            onPointerDown={startHold}
-            onPointerUp={cancelHold}
-            onPointerLeave={cancelHold}
-            onPointerCancel={cancelHold}
-            onContextMenu={(e) => e.preventDefault()}
-            style={{ cursor: 'pointer' }}
-          >
+          <button type="button" onClick={() => go('boot')} style={{ cursor: 'pointer' }}>
             {secret ? SECRET_SITE.name : SITE.name}
           </button>
         </div>
@@ -483,9 +481,31 @@ export default function Stage() {
 
         {/* work / file select */}
         {workMode && (
-          <div style={css(`${workStyle};${animCss(workMode)};pointer-events:auto`)} inert={workMode === 'out' ? true : undefined}>
+          <>
+            {/* Click-anywhere-else backdrop. The screen reads as a menu floating
+                over the head, so clicking off the cards should drop you back to
+                it. Sits under the brand and nav (z-index 8) so those still win,
+                and only while the screen is actually current — never under the
+                exit animation. */}
+            {workMode === 'in' && (
+              <div
+                aria-hidden="true"
+                onClick={() => go('boot')}
+                style={css('position:absolute;inset:0;z-index:7;pointer-events:auto;cursor:pointer')}
+              />
+            )}
+          <div
+            style={css(`${workStyle};${animCss(workMode)};pointer-events:none`)}
+            inert={workMode === 'out' ? true : undefined}
+          >
+            {/* The wrapper stays pointer-events:none so its padding, the heading
+                and the hint all fall through to the backdrop above. Only the
+                grid takes clicks back, and it forwards its own empty cells. */}
             <h2 style={css(sectionTitle)}>SELECT A FILE</h2>
-            <div style={css(gridStyle)}>
+            <div
+              style={css(`${gridStyle};pointer-events:auto`)}
+              onClick={(e) => { if (e.target === e.currentTarget) go('boot'); }}
+            >
               {projects.map((p, i) => {
                 const active = i === sel;
                 const cardStyle = `width:100%;text-align:left;display:flex;flex-direction:column;gap:9px;padding:${m ? '16px 16px' : '15px 17px'};cursor:pointer;background:${active ? 'var(--card-active)' : 'var(--card)'};border:3px solid ${active ? 'var(--acc)' : 'var(--bd)'};box-shadow:0 6px 0 ${active ? 'var(--acc-sh2)' : 'var(--card-sh)'};transform:translateY(${active ? '-4px' : '0'});transition:transform .12s`;
@@ -535,6 +555,7 @@ export default function Stage() {
             </div>
             <span style={css(workHintStyle)}>{workHint}</span>
           </div>
+          </>
         )}
 
         {/* file detail */}
@@ -551,14 +572,37 @@ export default function Stage() {
                 <PixelGallery shots={d.screenshots} mobile={m} />
               )}
               <div style={css(factsStyle)}>
-                {/* The only hint that the secret exists. It reads as one more
-                    stat in the grid until you notice it never says 1 / 1. */}
-                {(d.secretCounter ? [...d.facts, ['SECRETS', secret ? '1 / 1' : '0 / 1'] as [string, string]] : d.facts).map(([k, v]) => (
+                {d.facts.map(([k, v]) => (
                   <div key={k} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <span style={{ fontSize: '8px', letterSpacing: '2px', color: 'var(--tx-dimmer)' }}>{k}</span>
                     <span style={{ fontFamily: MONO, fontSize: '14px', color: 'var(--tx-strong)' }}>{v}</span>
                   </div>
                 ))}
+                {/* The only hint that the secret exists, and also the way in.
+                    It reads as one more stat in the grid until you notice it
+                    never says 1 / 1 — and it never can, because the file
+                    carrying it is professional work and so is gone the moment
+                    the code lands. */}
+                {d.secretCounter && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <span style={{ fontSize: '8px', letterSpacing: '2px', color: 'var(--tx-dimmer)' }}>SECRETS</span>
+                    {/* Padding grows the touch target to the 44px minimum while
+                        the negative margin cancels it, so the stat still sits
+                        exactly where the others do. tabIndex -1 keeps it out of
+                        the tab order: a stop here would give the game away, and
+                        keyboard users have the code itself. `cursor:text` is
+                        what the surrounding prose already shows — a pointer
+                        would be a tell on hover. */}
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      onClick={bumpSecret}
+                      style={css(`font-family:${MONO};font-size:14px;color:var(--tx-strong);text-align:left;align-self:flex-start;cursor:text;padding:15px 12px;margin:-15px -12px`)}
+                    >
+                      {secretValue}
+                    </button>
+                  </div>
+                )}
               </div>
               {d.links && d.links.length > 0 && (
                 <div style={css(`display:flex;flex-wrap:wrap;gap:${m ? 10 : 12}px`)}>
@@ -586,6 +630,20 @@ export default function Stage() {
                 </div>
               ))}
             </div>
+            {secret && (
+              <>
+                {/* The way out. Hidden from the professional side, but plainly
+                    labelled once you are inside — finding the entrance is the
+                    puzzle, and the touch trigger lives on a file that secret
+                    mode removes, so without this a phone has no way back. */}
+                <button type="button" onClick={toggleSecret} style={css(`${detailLinkStyle};align-self:flex-start`)}>
+                  QUIT TO MAIN MENU
+                </button>
+                <span style={css('font-size:7px;letter-spacing:1px;line-height:1.9;color:var(--tx-dimmer)')}>
+                  {SECRET_NOTE}
+                </span>
+              </>
+            )}
           </div>
         )}
 
